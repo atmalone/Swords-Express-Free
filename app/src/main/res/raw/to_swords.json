@@ -1,0 +1,191 @@
+[
+  {
+    "lat":"53.3477969",
+    "long":"-6.2584213",
+    "stop_num":"555",
+    "index":"29",
+    "stop_name":"Eden Quay"
+  },
+  {
+    "lat":"53.3482716",
+    "long":"-6.2502319",
+    "stop_num":"556",
+    "index":"30",
+    "stop_name":"IFSC"
+  },
+  {
+    "lat":"53.3481121",
+    "long":"-6.2472811",
+    "stop_num":"557",
+    "index":"31",
+    "stop_name":"Custom House Quay (Jury's)"
+  },
+  {
+    "lat":"53.3477493",
+    "long":"-6.2423821",
+    "stop_num":"558",
+    "index":"32",
+    "stop_name":"Custom House Quay (Clarion)"
+  },
+  {
+    "lat":"53.3473521",
+    "long":"-6.2364198",
+    "stop_num":"559",
+    "index":"33",
+    "stop_name":"North Wall Quay"
+  },
+  {
+    "lat":"53.346875",
+    "long":"-6.228919",
+    "stop_num":"560",
+    "index":"34",
+    "stop_name":"Point Depot (North Wall Quay)"
+  },
+  {
+    "lat":"53.4434416",
+    "long":"-6.2111721",
+    "stop_num":"562",
+    "index":"35",
+    "stop_name":"Holywell Distributor Road"
+  },
+  {
+    "lat":"53.446133",
+    "long":"-6.222701",
+    "stop_num":"563",
+    "index":"36",
+    "stop_name":"Airside Central"
+  },
+  {
+    "lat":"53.444509",
+    "long":"-6.231292",
+    "stop_num":"564",
+    "index":"37",
+    "stop_name":"Boroimhe Maples"
+  },
+  {
+    "lat":"53.445133",
+    "long":"-6.235007",
+    "stop_num":"565",
+    "index":"38",
+    "stop_name":"Boroimhe Laurels"
+  },
+  {
+    "lat":"53.4521321",
+    "long":"-6.2286058",
+    "stop_num":"566",
+    "index":"39",
+    "stop_name":"Ballintrane"
+  },
+  {
+    "lat":"53.4544301",
+    "long":"-6.224466",
+    "stop_num":"567",
+    "index":"40",
+    "stop_name":"Highfields"
+  },
+  {
+    "lat":"53.45538",
+    "long":"-6.222422",
+    "stop_num":"568",
+    "index":"41",
+    "stop_name":"Dublin Road (opp Penneys)"
+  },
+  {
+    "lat":"53.454339",
+    "long":"-6.216293",
+    "stop_num":"569",
+    "index":"42",
+    "stop_name":"Malahide Roundabout"
+  },
+  {
+    "lat":"53.461677",
+    "long":"-6.2134949",
+    "stop_num":"570",
+    "index":"43",
+    "stop_name":"Seatown Road"
+  },
+  {
+    "lat":"53.464877",
+    "long":"-6.2169974",
+    "stop_num":"571",
+    "index":"44",
+    "stop_name":"West Seatown"
+  },
+  {
+    "lat":"53.4680775",
+    "long":"-6.2215895",
+    "stop_num":"572",
+    "index":"45",
+    "stop_name":"Saint Colmcille's GFC"
+  },
+  {
+    "lat":"53.4684694",
+    "long":"-6.2275828",
+    "stop_num":"573",
+    "index":"46",
+    "stop_name":"Jugback Lane"
+  },
+  {
+    "lat":"53.4695937",
+    "long":"-6.2318054",
+    "stop_num":"574",
+    "index":"47",
+    "stop_name":"Applewood Estate"
+  },
+  {
+    "lat":"53.4683705",
+    "long":"-6.2362437",
+    "stop_num":"575",
+    "index":"48",
+    "stop_name":"Laurelton"
+  },
+  {
+    "lat":"53.4666115",
+    "long":"-6.2392209",
+    "stop_num":"576",
+    "index":"49",
+    "stop_name":"Cianlea"
+  },
+  {
+    "lat":"53.4656155",
+    "long":"-6.2396175",
+    "stop_num":"577",
+    "index":"50",
+    "stop_name":"Ardcian"
+  },
+  {
+    "lat":"53.4641399",
+    "long":"-6.239343",
+    "stop_num":"578",
+    "index":"51",
+    "stop_name":"Lios Cian"
+  },
+  {
+    "lat":"53.4616212",
+    "long":"-6.2403112",
+    "stop_num":"579",
+    "index":"52",
+    "stop_name":"Valley View"
+  },
+  {
+    "lat":"53.4598859",
+    "long":"-6.2417255",
+    "stop_num":"580",
+    "index":"53",
+    "stop_name":"Saint Cronan's South"
+  },
+  {
+    "lat":"53.459853",
+    "long":"-6.245138",
+    "stop_num":"581",
+    "index":"54",
+    "stop_name":"Swords Manor"
+  },
+  {
+    "lat":"53.339029",
+    "long":"-6.249886",
+    "stop_num":"581",
+    "index":"55",
+    "stop_name":"Merrion Square"
+  }
+]
