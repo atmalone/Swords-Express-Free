@@ -1,11 +1,10 @@
 package com.example.atmalone.swordsexpress
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
-import android.support.v4.app.ActivityCompat.checkSelfPermission
-import android.support.v7.app.AppCompatActivity
+import android.support.v4.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -14,42 +13,58 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.gson.Gson
+import java.util.*
+import android.graphics.Bitmap
+import android.provider.MediaStore.Images.Media.getBitmap
+import android.graphics.drawable.BitmapDrawable
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+
+class MapsActivity : Fragment(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     lateinit var marker: Marker
-    var stops : List<StopInfo>? = null
+    private lateinit var stops: Array<StopInfo>
 
-    var markers : List<Marker>? = null
+    private val mStopMap = HashMap<String, Marker>()
 
     val REQUEST_READ_EXTERNAL = 1
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_maps)
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return inflater.inflate(R.layout.activity_maps, container, false)!!
+    }
 
-        if (checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-        != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                REQUEST_READ_EXTERNAL)
-        } else {
-            stops = getListOfStops()
-        }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val supportMapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+        supportMapFragment.getMapAsync(this)
+
+        getListOfStops()
+//        createMarkers()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        if(requestCode == REQUEST_READ_EXTERNAL) getListOfStops()
+        if (requestCode == REQUEST_READ_EXTERNAL) getListOfStops()
     }
 
-    private fun getListOfStops() : List<StopInfo> {
-        val stopList: List<StopInfo> = Gson().fromJson(resources.openRawResource(R.raw.to_swords)
-            .bufferedReader().use{ it.readText() } , Array<StopInfo>::class.java).toMutableList()
-        return stopList
+    private fun getListOfStops() {
+        stops = Gson().fromJson(resources.openRawResource(R.raw.to_swords)
+            .bufferedReader().use { it.readText() }, Array<StopInfo>::class.java)
+    }
+
+    fun createMarkers() {
+        val bitmapdraw = resources.getDrawable(R.drawable.stop_icon_small) as BitmapDrawable
+        val b = bitmapdraw.bitmap
+        val smallMarker = Bitmap.createScaledBitmap(b, 100, 100, false)
+
+        stops.forEach { stopInfo ->
+            val stopPosition = LatLng(stopInfo.lat.toDouble(), stopInfo.long.toDouble())
+            val markerOption = MarkerOptions().position(stopPosition)
+                .title(stopInfo.stop_name)
+                .icon(BitmapDescriptorFactory.fromBitmap(smallMarker))
+            marker = mMap.addMarker(markerOption)
+            mStopMap[stopInfo.stop_num] = marker
+        }
     }
 
     /**
@@ -64,9 +79,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        // Add a marker in Sydney and move the camera
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        createMarkers()
+
+        val stop = stops.first()
+        val startPosition = LatLng(stop.lat.toDouble(), stop.long.toDouble())
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPosition, 15f))
     }
 }
