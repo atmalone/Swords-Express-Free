@@ -17,6 +17,7 @@ import java.util.*
 import android.graphics.Bitmap
 import android.provider.MediaStore.Images.Media.getBitmap
 import android.graphics.drawable.BitmapDrawable
+import android.widget.RadioGroup
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
 
@@ -40,7 +41,9 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         supportMapFragment.getMapAsync(this)
 
         getListOfStops()
-//        createMarkers()
+
+        val radioGroup = getView()!!.findViewById<RadioGroup>(R.id.direction_group)
+
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
