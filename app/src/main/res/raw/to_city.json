@@ -4,195 +4,223 @@
     "long":"-6.2503624",
     "stop_num":"333",
     "index":"1",
-    "stop_name":"Abbeyvale"
+    "stop_name":"Abbeyvale",
+    "direction":"city"
   },
   {
     "lat":"53.459984",
     "long":"-6.245307",
     "stop_num":"334",
     "index":"2",
-    "stop_name":"Swords Manor"
+    "stop_name":"Swords Manor",
+    "direction":"city"
   },
   {
     "lat":"53.4606895",
     "long":" -6.2413665",
     "stop_num":"339",
     "index":"3",
-    "stop_name":"Valley View"
+    "stop_name":"Valley View",
+    "direction":"city"
   },
   {
     "lat":"53.4625433",
     "long":" -6.2398851",
     "stop_num":"338",
     "index":"4",
-    "stop_name":"The Gallops"
+    "stop_name":"The Gallops",
+    "direction":"city"
   },
   {
     "lat":"53.463878",
     "long":"-6.239549",
     "stop_num":"337",
     "index":"5",
-    "stop_name":"Lios Cian"
+    "stop_name":"Lios Cian",
+    "direction":"city"
   },
   {
     "lat":"53.4657815",
     "long":" -6.2397887",
     "stop_num":"336",
     "index":"6",
-    "stop_name":"Cianlea"
+    "stop_name":"Cianlea",
+    "direction":"city"
   },
   {
     "lat":"53.468251",
     "long":"-6.2367971",
     "stop_num":"1234",
     "index":"7",
-    "stop_name":"Laurelton"
+    "stop_name":"Laurelton",
+    "direction":"city"
   },
   {
     "lat":"53.4694079",
     "long":" -6.2308137",
     "stop_num":"340",
     "index":"8",
-    "stop_name":"Applewood Estate"
+    "stop_name":"Applewood Estate",
+    "direction":"city"
   },
   {
     "lat":"53.4686893",
     "long":" -6.2279908",
     "stop_num":"341",
     "index":"9",
-    "stop_name":"Jugback Lane"
+    "stop_name":"Jugback Lane",
+    "direction":"city"
   },
   {
     "lat":"53.4682362",
     "long":" -6.2209795",
     "stop_num":"342",
     "index":"10",
-    "stop_name":"Saint Colmcille's GFC"
+    "stop_name":"Saint Colmcille's GFC",
+    "direction":"city"
   },
   {
     "lat":"53.4650053",
     "long":" -6.2173297",
     "stop_num":"343",
     "index":"11",
-    "stop_name":"West Seatown"
+    "stop_name":"West Seatown",
+    "direction":"city"
   },
   {
     "lat":"53.4622247",
     "long":" -6.2131752",
     "stop_num":"344",
     "index":"12",
-    "stop_name":"Seatown Road"
+    "stop_name":"Seatown Road",
+    "direction":"city"
   },
   {
     "lat":"53.4569384",
     "long":" -6.2124503",
     "stop_num":"345",
     "index":"13",
-    "stop_name":"Swords Bypass"
+    "stop_name":"Swords Bypass",
+    "direction":"city"
   },
   {
     "lat":"53.454165",
     "long":"-6.215768",
     "stop_num":"582",
     "index":"14",
-    "stop_name":"Malahide Roundabout"
+    "stop_name":"Malahide Roundabout",
+    "direction":"city"
   },
   {
     "lat":"53.454629",
     "long":"-6.2183",
     "stop_num":"347",
     "index":"15",
-    "stop_name":"Pavilions Shopping Centre"
+    "stop_name":"Pavilions Shopping Centre",
+    "direction":"city"
   },
   {
     "lat":"53.4558985",
     "long":" -6.2217432",
     "stop_num":"348",
     "index":"16",
-    "stop_name":"Dublin Road (Penneys)"
+    "stop_name":"Dublin Road (Penneys)",
+    "direction":"city"
   },
   {
     "lat":"53.4543519",
     "long":" -6.2243928",
     "stop_num":"583",
     "index":"17",
-    "stop_name":"Highfields"
+    "stop_name":"Highfields",
+    "direction":"city"
   },
   {
     "lat":"53.4526008",
     "long":" -6.2272095",
     "stop_num":"587",
     "index":"18",
-    "stop_name":"Ballintrane"
+    "stop_name":"Ballintrane",
+    "direction":"city"
   },
   {
     "lat":"53.4455748",
     "long":" -6.2352678",
     "stop_num":"351",
     "index":"19",
-    "stop_name":"Boroimhe Laurels"
+    "stop_name":"Boroimhe Laurels",
+    "direction":"city"
   },
   {
     "lat":"53.444665",
     "long":"-6.231174",
     "stop_num":"352",
     "index":"20",
-    "stop_name":"Boroimhe Maples"
+    "stop_name":"Boroimhe Maples",
+    "direction":"city"
   },
   {
     "lat":"53.4449935",
     "long":" -6.2271727",
     "stop_num":"353",
     "index":"21",
-    "stop_name":"Airside Road"
+    "stop_name":"Airside Road",
+    "direction":"city"
   },
   {
     "lat":"53.446006",
     "long":"-6.2243145",
     "stop_num":"354",
     "index":"22",
-    "stop_name":"Airside Central"
+    "stop_name":"Airside Central",
+    "direction":"city"
   },
   {
     "lat":"53.443639",
     "long":"-6.2111045",
     "stop_num":"355",
     "index":"23",
-    "stop_name":"Holywell Distributor Road"
+    "stop_name":"Holywell Distributor Road",
+    "direction":"city"
   },
   {
     "lat":"53.4434736",
     "long":" -6.2093203",
     "stop_num":"356",
     "index":"24",
-    "stop_name":"M1 Drinan"
+    "stop_name":"M1 Drinan",
+    "direction":"city"
   },
   {
     "lat":"53.3507872",
     "long":" -6.2259726",
     "stop_num":"357",
     "index":"25",
-    "stop_name":"East Wall Road"
+    "stop_name":"East Wall Road",
+    "direction":"city"
   },
   {
     "lat":"53.3474227",
     "long":" -6.2397389",
     "stop_num":"584",
     "index":"26",
-    "stop_name":"Convention Centre"
+    "stop_name":"Convention Centre",
+    "direction":"city"
   },
   {
     "lat":"53.3479217",
     "long":" -6.247108",
     "stop_num":"585",
     "index":"27",
-    "stop_name":"Seán O'Casey Bridge"
+    "stop_name":"Seán O'Casey Bridge",
+    "direction":"city"
   },
   {
     "lat":"53.348063",
     "long":"-6.256350",
     "stop_num":"586",
     "index":"28",
-    "stop_name":"Eden Quay"
+    "stop_name":"Eden Quay",
+    "direction":"city"
   }
 ]

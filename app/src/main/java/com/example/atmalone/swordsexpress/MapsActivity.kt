@@ -1,33 +1,47 @@
 package com.example.atmalone.swordsexpress
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.telecom.Call
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.Toast
+import com.google.android.gms.common.api.Response
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import okhttp3.*
+import org.json.JSONArray
+import java.io.IOException
 import java.util.*
-import android.graphics.Bitmap
-import android.provider.MediaStore.Images.Media.getBitmap
-import android.graphics.drawable.BitmapDrawable
-import android.widget.RadioGroup
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import kotlin.collections.ArrayList
 
 
 class MapsActivity : Fragment(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     lateinit var marker: Marker
-    private lateinit var stops: Array<StopInfo>
+    private lateinit var toSwordsStops: Array<StopInfo>
+    private lateinit var toCityStops: Array<StopInfo>
+    private lateinit var buses: ArrayList<BusInfo>
+    private val mBusMap = HashMap<String, Marker>()
 
+    var direction: String = "city"
     private val mStopMap = HashMap<String, Marker>()
+    private val mSBusMap = HashMap<String, Marker>()
 
     val REQUEST_READ_EXTERNAL = 1
 
@@ -40,27 +54,67 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         val supportMapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         supportMapFragment.getMapAsync(this)
 
-        getListOfStops()
-
-        val radioGroup = getView()!!.findViewById<RadioGroup>(R.id.direction_group)
-
+        toggleStops()
+        fetchBusJson()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        if (requestCode == REQUEST_READ_EXTERNAL) getListOfStops()
+    private fun fetchBusJson() {
+
+        val url : String = "https://www.swordsexpress.com/latlong.php"
+
+        val request = Request.Builder().url(url).build()
+
+        var client = OkHttpClient()
+        client.newCall(request).enqueue(object: Callback {
+            override fun onResponse(call: okhttp3.Call?, response: okhttp3.Response?) {
+                var body = response?.body()?.string()
+                print(body)
+
+                val busesJson = Gson().fromJson(body, Array<BusInfo>::class.java)
+                busesJson.forEach {busInfo ->
+                    print(busInfo)
+                    val busPosition = LatLng(busInfo.lat!!, busInfo.long!!)
+                    val markerOption = MarkerOptions().position(busPosition)
+                        .title(busInfo.licenseNum)
+                    marker = mMap.addMarker(markerOption)
+                    mBusMap[busInfo.licenseNum] = marker
+
+                }
+            }
+
+            override fun onFailure(call: okhttp3.Call?, e: IOException?) {
+            }
+        })
     }
 
-    private fun getListOfStops() {
-        stops = Gson().fromJson(resources.openRawResource(R.raw.to_swords)
+
+    fun createSwordsMarkers() {
+        toSwordsStops = Gson().fromJson(resources.openRawResource(R.raw.to_swords)
             .bufferedReader().use { it.readText() }, Array<StopInfo>::class.java)
-    }
 
-    fun createMarkers() {
         val bitmapdraw = resources.getDrawable(R.drawable.stop_icon_small) as BitmapDrawable
         val b = bitmapdraw.bitmap
         val smallMarker = Bitmap.createScaledBitmap(b, 100, 100, false)
 
-        stops.forEach { stopInfo ->
+        toSwordsStops.forEach { stopInfo ->
+            val stopPosition = LatLng(stopInfo.lat.toDouble(), stopInfo.long.toDouble())
+            val markerOption = MarkerOptions().position(stopPosition)
+                .title(stopInfo.stop_name)
+                .icon(BitmapDescriptorFactory.fromBitmap(smallMarker))
+            marker = mMap.addMarker(markerOption)
+            mStopMap[stopInfo.stop_num] = marker
+        }
+    }
+
+    fun createCityMarkers() {
+        toCityStops = Gson().fromJson(resources.openRawResource(R.raw.to_city)
+            .bufferedReader().use { it.readText() }, Array<StopInfo>::class.java)
+
+        val bitmapdraw = resources.getDrawable(R.drawable.stop_icon_small) as BitmapDrawable
+        val b = bitmapdraw.bitmap
+        val smallMarker = Bitmap.createScaledBitmap(b, 100, 100, false)
+
+        toCityStops.forEach { stopInfo ->
             val stopPosition = LatLng(stopInfo.lat.toDouble(), stopInfo.long.toDouble())
             val markerOption = MarkerOptions().position(stopPosition)
                 .title(stopInfo.stop_name)
@@ -82,10 +136,33 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        createMarkers()
+        createSwordsMarkers()
 
-        val stop = stops.first()
+        val stop = toSwordsStops.first()
         val startPosition = LatLng(stop.lat.toDouble(), stop.long.toDouble())
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPosition, 15f))
+    }
+
+    fun toggleStops() {
+        val radioGroup : RadioGroup = view!!.findViewById(R.id.direction_group)
+        val swordsRadioButton: RadioButton = view!!.findViewById(R.id.swords)
+        val cityRadioButton: RadioButton = view!!.findViewById(R.id.city)
+
+        radioGroup?.setOnCheckedChangeListener { group, checkedId ->
+            var text = "You selected:"
+            when {
+                (cityRadioButton.isChecked) -> { direction = "city"
+                    text += direction
+                    mStopMap.entries.clear()
+                    createCityMarkers()
+                }
+                (swordsRadioButton.isChecked) -> { direction = "swords"
+                    text += direction
+                    mStopMap.entries.clear()
+                    createSwordsMarkers()
+                }
+            }
+            Toast.makeText(this.context, text, Toast.LENGTH_SHORT).show()
+        }
     }
 }
