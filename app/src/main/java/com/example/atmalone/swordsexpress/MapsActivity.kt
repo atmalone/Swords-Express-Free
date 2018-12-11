@@ -1,18 +1,16 @@
 package com.example.atmalone.swordsexpress
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.telecom.Call
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.Toast
-import com.google.android.gms.common.api.Response
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -22,12 +20,11 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import okhttp3.*
-import org.json.JSONArray
 import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.log
 
 
 class MapsActivity : Fragment(), OnMapReadyCallback {
@@ -37,11 +34,10 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
     private lateinit var toSwordsStops: Array<StopInfo>
     private lateinit var toCityStops: Array<StopInfo>
     private lateinit var buses: ArrayList<BusInfo>
-    private val mBusMap = HashMap<String, Marker>()
 
     var direction: String = "city"
     private val mStopMap = HashMap<String, Marker>()
-    private val mSBusMap = HashMap<String, Marker>()
+    private val mBusMap = HashMap<String, Marker>()
 
     val REQUEST_READ_EXTERNAL = 1
 
@@ -55,10 +51,10 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         supportMapFragment.getMapAsync(this)
 
         toggleStops()
-        fetchBusJson()
+        fetchBusesFromUrl()
     }
 
-    private fun fetchBusJson() {
+    private fun fetchBusesFromUrl() {
 
         val url : String = "https://www.swordsexpress.com/latlong.php"
 
@@ -68,25 +64,48 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         client.newCall(request).enqueue(object: Callback {
             override fun onResponse(call: okhttp3.Call?, response: okhttp3.Response?) {
                 var body = response?.body()?.string()
-                print(body)
 
-                val busesJson = Gson().fromJson(body, Array<BusInfo>::class.java)
-                busesJson.forEach {busInfo ->
-                    print(busInfo)
-                    val busPosition = LatLng(busInfo.lat!!, busInfo.long!!)
+                val arrayOfBuses = Gson().fromJson(body, arrayListOf<ArrayList<String>>()::class.java)
+                for (busArray in arrayOfBuses) {
+                    if (busArray[1] == "hidden") continue
+                    val license = busArray[0]
+                    val lat: Double = busArray[1].toDouble()
+                    val long: Double = busArray[2].toDouble()
+                    val dateTime: String = busArray[3]
+                    val num: String = busArray[4]
+                    val speed: String = busArray[5]
+                    var direction: String = busArray[6]
+
+                    when (direction) {
+                        "n" -> direction = "North"
+                        "ne" -> direction = "Northeast"
+                        "nw" -> direction = "Northwest"
+                        "s" -> direction = "South"
+                        "se" -> direction = "Southeast"
+                        "sw" -> direction = "Southwest"
+                        "e" -> direction = "East"
+                        "w" -> direction = "West"
+                    }
+
+                    var bus = BusInfo(license, lat, long, dateTime, num, speed, direction)
+
+                    val bitmapdraw = resources.getDrawable(R.drawable.bus_icon) as BitmapDrawable
+                    val b = bitmapdraw.bitmap
+                    val bus_icon = Bitmap.createScaledBitmap(b, 100, 100, false)
+
+                    val busPosition = LatLng(bus.lat, bus.long)
                     val markerOption = MarkerOptions().position(busPosition)
-                        .title(busInfo.licenseNum)
+                        .title(bus.licenseNum)
+                        .icon(BitmapDescriptorFactory.fromBitmap(bus_icon))
                     marker = mMap.addMarker(markerOption)
-                    mBusMap[busInfo.licenseNum] = marker
-
+                    mBusMap[bus.licenseNum] = marker
                 }
             }
-
             override fun onFailure(call: okhttp3.Call?, e: IOException?) {
+
             }
         })
     }
-
 
     fun createSwordsMarkers() {
         toSwordsStops = Gson().fromJson(resources.openRawResource(R.raw.to_swords)
