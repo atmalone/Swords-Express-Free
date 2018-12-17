@@ -2,9 +2,11 @@ package com.example.atmalone.swordsexpress
 
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
-import android.os.AsyncTask
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.support.v4.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,10 +22,14 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.gson.Gson
-import okhttp3.*
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.IOException
 import java.util.*
+import kotlinx.coroutines.experimental.launch
 import kotlin.collections.ArrayList
+import kotlin.concurrent.scheduleAtFixedRate
 import kotlin.math.log
 
 
@@ -33,11 +39,16 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
     lateinit var marker: Marker
     private lateinit var toSwordsStops: Array<StopInfo>
     private lateinit var toCityStops: Array<StopInfo>
-    private lateinit var buses: ArrayList<BusInfo>
+    private var buses = ArrayList<BusInfo>()
+    private lateinit var busBitMap : Bitmap
+    private var mHandler = Handler()
+    private lateinit var mRunnable: Runnable
+
 
     var direction: String = "city"
     private val mStopMap = HashMap<String, Marker>()
     private val mBusMap = HashMap<String, Marker>()
+    private var busResponseBody : String? = ""
 
     val REQUEST_READ_EXTERNAL = 1
 
@@ -50,11 +61,50 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         val supportMapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         supportMapFragment.getMapAsync(this)
 
-        toggleStops()
-        fetchBusesFromUrl()
+        fetchBusDataFromUrl()
+
+        launch {
+            createBusBitmap()
+            toggleStops()
+        }
     }
 
-    private fun fetchBusesFromUrl() {
+    private fun createBusesFromResponseBody(busResponseBodyText : String?) {
+        if (!busResponseBodyText.isNullOrEmpty()){
+
+            val arrayOfBuses = Gson().fromJson(busResponseBodyText, arrayListOf<MutableList<String>>()::class.java)
+            var bus : BusInfo
+
+            for (busArray in arrayOfBuses) {
+                if (busArray[1] == "hidden") continue
+                val license = busArray[0]
+                val lat: Double = busArray[1].toDouble()
+                val long: Double = busArray[2].toDouble()
+                val dateTime: String = busArray[3]
+                val num: String = busArray[4]
+                val speed: String = busArray[5]
+                var direction: String = busArray[6]
+
+                when (direction) {
+                    "n" -> direction = "North"
+                    "ne" -> direction = "Northeast"
+                    "nw" -> direction = "Northwest"
+                    "s" -> direction = "South"
+                    "se" -> direction = "Southeast"
+                    "sw" -> direction = "Southwest"
+                    "e" -> direction = "East"
+                    "w" -> direction = "West"
+                }
+
+
+                bus = BusInfo(license, lat, long, dateTime, num, speed, direction)
+
+                buses.add(bus)
+            }
+        }
+    }
+
+    private fun fetchBusDataFromUrl() {
 
         val url : String = "https://www.swordsexpress.com/latlong.php"
 
@@ -63,42 +113,10 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         var client = OkHttpClient()
         client.newCall(request).enqueue(object: Callback {
             override fun onResponse(call: okhttp3.Call?, response: okhttp3.Response?) {
-                var body = response?.body()?.string()
+                busResponseBody = response?.body()?.string()
 
-                val arrayOfBuses = Gson().fromJson(body, arrayListOf<ArrayList<String>>()::class.java)
-                for (busArray in arrayOfBuses) {
-                    if (busArray[1] == "hidden") continue
-                    val license = busArray[0]
-                    val lat: Double = busArray[1].toDouble()
-                    val long: Double = busArray[2].toDouble()
-                    val dateTime: String = busArray[3]
-                    val num: String = busArray[4]
-                    val speed: String = busArray[5]
-                    var direction: String = busArray[6]
-
-                    when (direction) {
-                        "n" -> direction = "North"
-                        "ne" -> direction = "Northeast"
-                        "nw" -> direction = "Northwest"
-                        "s" -> direction = "South"
-                        "se" -> direction = "Southeast"
-                        "sw" -> direction = "Southwest"
-                        "e" -> direction = "East"
-                        "w" -> direction = "West"
-                    }
-
-                    var bus = BusInfo(license, lat, long, dateTime, num, speed, direction)
-
-                    val bitmapdraw = resources.getDrawable(R.drawable.bus_icon) as BitmapDrawable
-                    val b = bitmapdraw.bitmap
-                    val bus_icon = Bitmap.createScaledBitmap(b, 100, 100, false)
-
-                    val busPosition = LatLng(bus.lat, bus.long)
-                    val markerOption = MarkerOptions().position(busPosition)
-                        .title(bus.licenseNum)
-                        .icon(BitmapDescriptorFactory.fromBitmap(bus_icon))
-                    marker = mMap.addMarker(markerOption)
-                    mBusMap[bus.licenseNum] = marker
+                launch {
+                    createBusesFromResponseBody(busResponseBody)
                 }
             }
             override fun onFailure(call: okhttp3.Call?, e: IOException?) {
@@ -107,7 +125,43 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         })
     }
 
-    fun createSwordsMarkers() {
+    private fun createBusBitmap() {
+        val bitmapdraw = resources.getDrawable(R.drawable.bus_icon_green) as BitmapDrawable
+        val b = bitmapdraw.bitmap
+        busBitMap = Bitmap.createScaledBitmap(b, 100, 100, false)
+    }
+
+    private fun createBusMarkers(buses: ArrayList<BusInfo>){
+        try{
+        buses.forEach { bus ->
+            val busPosition = LatLng(bus.lat, bus.long)
+            val markerOption = MarkerOptions().position(busPosition)
+                .title(bus.licenseNum)
+                .icon(BitmapDescriptorFactory.fromBitmap(busBitMap))
+            marker = mMap.addMarker(markerOption)
+            mBusMap[bus.licenseNum] = marker
+            }
+        }
+        catch (e: Exception){
+            e.printStackTrace()
+        }
+
+    }
+
+    private fun updateBusMarkers() {
+        mBusMap.clear()
+        buses.removeAll(buses)
+
+        fetchBusDataFromUrl()
+        mRunnable = Runnable {
+            createBusMarkers(buses)
+            Log.i("uodate-", "The runnable 'createBusMarkers' was hit")
+        }
+        mHandler.postAtFrontOfQueue(mRunnable)
+        Log.i("uodate", "The runnable 'post runnable' was hit")
+    }
+
+    private fun createSwordsMarkers() {
         toSwordsStops = Gson().fromJson(resources.openRawResource(R.raw.to_swords)
             .bufferedReader().use { it.readText() }, Array<StopInfo>::class.java)
 
@@ -125,7 +179,7 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         }
     }
 
-    fun createCityMarkers() {
+    private fun createCityMarkers() {
         toCityStops = Gson().fromJson(resources.openRawResource(R.raw.to_city)
             .bufferedReader().use { it.readText() }, Array<StopInfo>::class.java)
 
@@ -156,10 +210,23 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         mMap = googleMap
 
         createSwordsMarkers()
+        createBusMarkers(buses)
 
         val stop = toSwordsStops.first()
         val startPosition = LatLng(stop.lat.toDouble(), stop.long.toDouble())
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPosition, 15f))
+
+        updateBusesPeriodically()
+
+    }
+
+    fun updateBusesPeriodically() {
+        val timer = Timer()
+        launch {
+            timer.scheduleAtFixedRate(10000, 10000) {
+                updateBusMarkers()
+            }
+        }
     }
 
     fun toggleStops() {
