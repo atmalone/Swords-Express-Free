@@ -4,8 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper
 import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -22,33 +22,31 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.gson.Gson
+import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.coroutines.experimental.launch
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
 import java.util.*
-import kotlinx.coroutines.experimental.launch
-import kotlin.collections.ArrayList
 import kotlin.concurrent.scheduleAtFixedRate
-import kotlin.math.log
 
 
 class MapsActivity : Fragment(), OnMapReadyCallback {
+    private val url = "https://www.swordsexpress.com/latlong.php"
 
     private lateinit var mMap: GoogleMap
-    lateinit var marker: Marker
     private lateinit var toSwordsStops: Array<StopInfo>
     private lateinit var toCityStops: Array<StopInfo>
-    private var buses = ArrayList<BusInfo>()
-    private lateinit var busBitMap : Bitmap
+    //    private var buses = ArrayList<BusInfo>()
     private var mHandler = Handler()
     private lateinit var mRunnable: Runnable
-
+    var lat = 0.0
 
     var direction: String = "city"
     private val mStopMap = HashMap<String, Marker>()
     private val mBusMap = HashMap<String, Marker>()
-    private var busResponseBody : String? = ""
+    private var busResponseBody: String? = ""
 
     val REQUEST_READ_EXTERNAL = 1
 
@@ -61,24 +59,30 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         val supportMapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         supportMapFragment.getMapAsync(this)
 
-        fetchBusDataFromUrl()
-
         launch {
-            createBusBitmap()
-            toggleStops()
+            fetchBusDataFromUrl()
         }
+
+        toggleStops()
     }
 
-    private fun createBusesFromResponseBody(busResponseBodyText : String?) {
-        if (!busResponseBodyText.isNullOrEmpty()){
+    private fun createBusesFromResponseBody(busResponseBodyText: String?): List<BusInfo>? {
+        if (!busResponseBodyText.isNullOrEmpty()) {
 
             val arrayOfBuses = Gson().fromJson(busResponseBodyText, arrayListOf<MutableList<String>>()::class.java)
-            var bus : BusInfo
+
+            val buses: ArrayList<BusInfo> = arrayListOf()
 
             for (busArray in arrayOfBuses) {
                 if (busArray[1] == "hidden") continue
                 val license = busArray[0]
-                val lat: Double = busArray[1].toDouble()
+                //todo delete me
+                if (lat != 0.0) {
+                    lat += 0.05
+                } else {
+                    lat = busArray[1].toDouble()
+
+                }
                 val long: Double = busArray[2].toDouble()
                 val dateTime: String = busArray[3]
                 val num: String = busArray[4]
@@ -97,104 +101,161 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
                 }
 
 
-                bus = BusInfo(license, lat, long, dateTime, num, speed, direction)
+                var bus = BusInfo(license, lat, long, dateTime, num, speed, direction)
 
                 buses.add(bus)
             }
+
+            return buses
         }
+
+        return null
     }
 
     private fun fetchBusDataFromUrl() {
 
-        val url : String = "https://www.swordsexpress.com/latlong.php"
 
         val request = Request.Builder().url(url).build()
 
         var client = OkHttpClient()
-        client.newCall(request).enqueue(object: Callback {
+        client.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: okhttp3.Call?, response: okhttp3.Response?) {
                 busResponseBody = response?.body()?.string()
 
-                launch {
-                    createBusesFromResponseBody(busResponseBody)
+                var buses = createBusesFromResponseBody(busResponseBody)
+
+                if (buses?.size == 0) {
+                    //todo delete me
+                    val busString =
+                        resources.openRawResource(R.raw.buses)
+                            .bufferedReader().use { it.readText() }
+
+                    buses = createBusesFromResponseBody(busString)
+
+
+                    buses?.let { createBusMarkers(it) }
+
+                } else {
+
+                    //todo keep this
+                    buses?.let {
+                        createBusMarkers(it)
+                    }
                 }
             }
+
             override fun onFailure(call: okhttp3.Call?, e: IOException?) {
 
             }
         })
     }
 
-    private fun createBusBitmap() {
-        val bitmapdraw = resources.getDrawable(R.drawable.bus_icon_green) as BitmapDrawable
+    private fun createScaledBitmap(drawable: Int): Bitmap {
+        val bitmapdraw = ContextCompat.getDrawable(this.requireContext(), drawable) as BitmapDrawable
         val b = bitmapdraw.bitmap
-        busBitMap = Bitmap.createScaledBitmap(b, 100, 100, false)
+        return Bitmap.createScaledBitmap(b, 100, 100, false)
     }
 
-    private fun createBusMarkers(buses: ArrayList<BusInfo>){
-        try{
-        buses.forEach { bus ->
-            val busPosition = LatLng(bus.lat, bus.long)
-            val markerOption = MarkerOptions().position(busPosition)
-                .title(bus.licenseNum)
-                .icon(BitmapDescriptorFactory.fromBitmap(busBitMap))
-            marker = mMap.addMarker(markerOption)
-            mBusMap[bus.licenseNum] = marker
+    private fun createBusMarkers(buses: List<BusInfo>) {
+        try {
+            buses.forEach { bus ->
+                requireActivity().runOnUiThread {
+                    mBusMap[bus.licenseNum] = createMarker(
+                        bus.licenseNum,
+                        LatLng(bus.lat, bus.long),
+                        createScaledBitmap(R.drawable.bus_icon_green),
+                        bus.licenseNum
+                    )
+                }
             }
-        }
-        catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
         }
 
     }
 
     private fun updateBusMarkers() {
-        mBusMap.clear()
-        buses.removeAll(buses)
-
-        fetchBusDataFromUrl()
-        mRunnable = Runnable {
-            createBusMarkers(buses)
-            Log.i("uodate-", "The runnable 'createBusMarkers' was hit")
+        mBusMap.forEach { s, marker ->
+            requireActivity().runOnUiThread {
+                marker.remove()
+            }
         }
-        mHandler.postAtFrontOfQueue(mRunnable)
-        Log.i("uodate", "The runnable 'post runnable' was hit")
+        mBusMap.clear()
+//        buses.removeAll(buses)
+
+//        mRunnable = Runnable {
+        fetchBusDataFromUrl()
+
+        Log.i("update-", "The runnable 'createBusMarkers' was hit")
+//        }
+//        mHandler.post(mRunnable)
+        Log.i("update", "The runnable 'post runnable' was hit")
     }
 
-    private fun createSwordsMarkers() {
-        toSwordsStops = Gson().fromJson(resources.openRawResource(R.raw.to_swords)
-            .bufferedReader().use { it.readText() }, Array<StopInfo>::class.java)
+//    private fun updateBusMarkers() {
+//        try {
+//            mBusMap.clear()
+//        }
+//        catch (e: Exception)
+//        {
+//            Log.i("remove buses from Map", e.toString())
+//            e.printStackTrace() }
+//        try {
+//            while(buses.size != 0) {
+//                buses.removeAll(buses)
+//            }
+//        } catch (e: Exception) {
+//            Log.i("remove buses", e.toString())
+//            e.printStackTrace()
+//        }
+//
+//        launch {
+//            fetchBusDataFromUrl()
+//        }
+//        mRunnable = Runnable {
+//            createBusMarkers(buses)
+//            Log.i("update-", "The runnable 'createBusMarkers' was hit")
+//        }
+//        mHandler.post(mRunnable)
+//    }
 
-        val bitmapdraw = resources.getDrawable(R.drawable.stop_icon_small) as BitmapDrawable
-        val b = bitmapdraw.bitmap
-        val smallMarker = Bitmap.createScaledBitmap(b, 100, 100, false)
+    private fun createSwordsMarkers() {
+        toSwordsStops = Gson().fromJson(
+            resources.openRawResource(R.raw.to_swords)
+                .bufferedReader().use { it.readText() }, Array<StopInfo>::class.java
+        )
 
         toSwordsStops.forEach { stopInfo ->
-            val stopPosition = LatLng(stopInfo.lat.toDouble(), stopInfo.long.toDouble())
-            val markerOption = MarkerOptions().position(stopPosition)
-                .title(stopInfo.stop_name)
-                .icon(BitmapDescriptorFactory.fromBitmap(smallMarker))
-            marker = mMap.addMarker(markerOption)
-            mStopMap[stopInfo.stop_num] = marker
+            mStopMap[stopInfo.stop_num] = createMarker(
+                stopInfo.stop_num,
+                LatLng(stopInfo.lat.toDouble(), stopInfo.long.toDouble()),
+                createScaledBitmap(R.drawable.stop_icon_small),
+                stopInfo.stop_name
+            )
         }
     }
 
     private fun createCityMarkers() {
-        toCityStops = Gson().fromJson(resources.openRawResource(R.raw.to_city)
-            .bufferedReader().use { it.readText() }, Array<StopInfo>::class.java)
-
-        val bitmapdraw = resources.getDrawable(R.drawable.stop_icon_small) as BitmapDrawable
-        val b = bitmapdraw.bitmap
-        val smallMarker = Bitmap.createScaledBitmap(b, 100, 100, false)
+        toCityStops = Gson().fromJson(
+            resources.openRawResource(R.raw.to_city)
+                .bufferedReader().use { it.readText() }, Array<StopInfo>::class.java
+        )
 
         toCityStops.forEach { stopInfo ->
-            val stopPosition = LatLng(stopInfo.lat.toDouble(), stopInfo.long.toDouble())
-            val markerOption = MarkerOptions().position(stopPosition)
-                .title(stopInfo.stop_name)
-                .icon(BitmapDescriptorFactory.fromBitmap(smallMarker))
-            marker = mMap.addMarker(markerOption)
-            mStopMap[stopInfo.stop_num] = marker
+            mStopMap[stopInfo.stop_num] = createMarker(
+                stopInfo.stop_num,
+                LatLng(stopInfo.lat.toDouble(), stopInfo.long.toDouble()),
+                createScaledBitmap(R.drawable.stop_icon_small),
+                stopInfo.stop_name
+            )
         }
+    }
+
+    private fun createMarker(index: String, location: LatLng, bitmap: Bitmap, title: String): Marker {
+        val markerOption = MarkerOptions().position(location)
+            .title(title)
+            .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
+        return mMap.addMarker(markerOption)
     }
 
     /**
@@ -210,7 +271,6 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         mMap = googleMap
 
         createSwordsMarkers()
-        createBusMarkers(buses)
 
         val stop = toSwordsStops.first()
         val startPosition = LatLng(stop.lat.toDouble(), stop.long.toDouble())
@@ -230,20 +290,30 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
     }
 
     fun toggleStops() {
-        val radioGroup : RadioGroup = view!!.findViewById(R.id.direction_group)
-        val swordsRadioButton: RadioButton = view!!.findViewById(R.id.swords)
-        val cityRadioButton: RadioButton = view!!.findViewById(R.id.city)
+        val radioGroup: RadioGroup = direction_group
+        val swordsRadioButton: RadioButton = swords
+        val cityRadioButton: RadioButton = city
 
-        radioGroup?.setOnCheckedChangeListener { group, checkedId ->
+        radioGroup.setOnCheckedChangeListener { group, checkedId ->
             var text = "You selected:"
             when {
-                (cityRadioButton.isChecked) -> { direction = "city"
+                (cityRadioButton.isChecked) -> {
+                    direction = "city"
                     text += direction
+
+                    mStopMap.forEach { stop, marker ->
+                        marker.remove()
+                    }
+
                     mStopMap.entries.clear()
                     createCityMarkers()
                 }
-                (swordsRadioButton.isChecked) -> { direction = "swords"
+                (swordsRadioButton.isChecked) -> {
+                    direction = "swords"
                     text += direction
+                    mStopMap.forEach { stop, marker ->
+                        marker.remove()
+                    }
                     mStopMap.entries.clear()
                     createSwordsMarkers()
                 }
