@@ -209,7 +209,7 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
     }
 
     private fun updateBusMarkers() {
-        mBusMap.forEach { s, marker ->
+        mBusMap.forEach { (s, marker) ->
             requireActivity().runOnUiThread {
                 marker.remove()
             }
@@ -334,7 +334,7 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
                 (cityRadioButton.isChecked) -> {
                     to_swords = false
 
-                    mStopMap.forEach { stop, marker ->
+                    mStopMap.forEach { (stop, marker) ->
                         marker.remove()
                     }
 
@@ -343,7 +343,7 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
                 }
                 (swordsRadioButton.isChecked) -> {
                     to_swords = true
-                    mStopMap.forEach { stop, marker ->
+                    mStopMap.forEach { (stop, marker) ->
                         marker.remove()
                     }
                     mStopMap.entries.clear()
