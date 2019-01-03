@@ -15,6 +15,6 @@
             android:layout_weight="1.05"
             android:foregroundGravity="center"
             android:scrollbars="vertical"
-            tools:listitem="@layout/activity_timetable_list" />
+            tools:listitem="@layout/info_list_item"/>
 
 </android.support.constraint.ConstraintLayout>
