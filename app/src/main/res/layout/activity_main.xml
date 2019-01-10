@@ -22,8 +22,7 @@
                 android:layout_height="?attr/actionBarSize"
                 android:layout_weight="1"
                 android:background="?attr/colorPrimary"
-                app:popupTheme="@style/AppTheme.PopupOverlay"
-                app:layout_scrollFlags="scroll|enterAlways">
+                app:popupTheme="@style/AppTheme.PopupOverlay">
 
         </android.support.v7.widget.Toolbar>
         <android.support.design.widget.TabLayout
@@ -41,7 +40,7 @@
                     android:id="@+id/tabItem2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/info_tab" />
+                    android:text="@string/timetables_tab"/>
 
         </android.support.design.widget.TabLayout>
     </android.support.design.widget.AppBarLayout>

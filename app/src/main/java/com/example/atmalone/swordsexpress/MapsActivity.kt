@@ -1,16 +1,12 @@
 package com.example.atmalone.swordsexpress
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.os.Handler
-import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
 import android.support.v4.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
@@ -326,7 +322,7 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
 
     fun toggleStops() {
         val radioGroup: RadioGroup = direction_group
-        val swordsRadioButton: RadioButton = swords
+        val swordsRadioButton: RadioButton = rb_sunday
         val cityRadioButton: RadioButton = city
 
         radioGroup.setOnCheckedChangeListener { group, checkedId ->

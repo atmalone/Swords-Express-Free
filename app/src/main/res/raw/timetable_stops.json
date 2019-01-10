@@ -1,0 +1,177 @@
+[
+  {
+    "title":"To Swords",
+    "value": [
+    {
+      "title": "Eden Quay"
+    },
+    {
+      "title": "IFSC"
+    },
+    {
+      "title": "Custom House Quay (Jury's)"
+    },
+    {
+      "title": "Custom House Quay (Clarion)"
+    },
+    {
+      "title": "North Wall Quay"
+    },
+    {
+      "title": "Point Depot"
+    },
+    {
+      "title": "Holywell Distributor Road"
+    },
+    {
+      "title": "Airside Central"
+    },
+    {
+      "title": "Boroimhe Maples"
+    },
+    {
+      "title": "Boroimhe Laurels"
+    },
+    {
+      "title": "Ballintrane"
+    },
+    {
+      "title": "Highfields"
+    },
+    {
+      "title": "Dublin Road (opp Penneys)"
+    },
+    {
+      "title": "Malahide Roundabout"
+    },
+    {
+      "title": "Seatown Road"
+    },
+    {
+      "title": "West Seatown"
+    },
+    {
+      "title": "Saint Colmcille's GFC"
+    },
+    {
+      "title": "Jugback Lane"
+    },
+    {
+      "title": "Applewood Estate"
+    },
+    {
+      "title": "Laurelton"
+    },
+    {
+      "title": "Cianlea"
+    },
+    {
+      "title": "Ardcian"
+    },
+    {
+      "title": "Lios Cian"
+    },
+    {
+      "title": "Valley View"
+    },
+    {
+      "title": "Saint Cronan's South"
+    },
+    {
+      "title": "Swords Manor"
+    },
+    {
+      "title": "Merrion Square"
+    }
+  ]
+  },
+  {
+    "title": "To City",
+    "value": [
+      {
+        "title": "Abbeyvale"
+      },
+      {
+        "title": "Swords Manor"
+      },
+      {
+        "title": "Valley View"
+      },
+      {
+        "title": "The Gallops"
+      },
+      {
+        "title": "Lios Cian"
+      },
+      {
+        "title": "Cianlea"
+      },
+      {
+        "title": "Laurelton"
+      },
+      {
+        "title": "Applewood Estate"
+      },
+      {
+        "title": "Jugback Lane"
+      },
+      {
+        "title": "Saint Colmcille's GFC"
+      },
+      {
+        "title": "West Seatown"
+      },
+      {
+        "title": "Seatown Road"
+      },
+      {
+        "title": "Swords Bypass"
+      },
+      {
+        "title": "Malahide Roundabout"
+      },
+      {
+        "title": "Pavilions Shopping Centre"
+      },
+      {
+        "title": "Dublin Road (Penneys)"
+      },
+      {
+        "title": "Highfields"
+      },
+      {
+        "title": "Ballintrane"
+      },
+      {
+        "title": "Boroimhe Laurels"
+      },
+      {
+        "title": "Boroimhe Maples"
+      },
+      {
+        "title": "Airside Road"
+      },
+      {
+        "title": "Airside Central"
+      },
+      {
+        "title": "Holywell Distributor Road"
+      },
+      {
+        "title": "M1 Drinan"
+      },
+      {
+        "title": "East Wall Road"
+      },
+      {
+        "title": "Convention Centre"
+      },
+      {
+        "title": "Seán O'Casey Bridge"
+      },
+      {
+        "title": "Eden Quay"
+      }
+    ]
+  }
+]

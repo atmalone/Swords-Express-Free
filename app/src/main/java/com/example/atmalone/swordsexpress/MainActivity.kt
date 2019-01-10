@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.view.ViewPager
 import android.os.Bundle
+import android.support.design.widget.TabLayout
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -40,6 +41,9 @@ class MainActivity : AppCompatActivity() {
 
         // Set up the ViewPager with the sections adapter.
         container.adapter = mSectionsPagerAdapter
+
+        container.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabs))
+        tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
 
     }
 
@@ -76,21 +80,21 @@ class MainActivity : AppCompatActivity() {
                     MapsActivity()
                 }
                 1 -> {
-                    TimetableListActivity()
+                    RouteListActivity()
                 }
                 else -> null
             }
         }
 
         override fun getCount(): Int {
-            // Show 3 total pages.
-            return 3
+            // Show 2 total pages.
+            return 2
         }
 
         override fun getPageTitle(position: Int): CharSequence? {
             when(position){
                 0 -> return "MAP"
-                1 -> return "INFORMATION"
+                1 -> return "TIMETABLES"
             }
             return null
         }

@@ -5,48 +5,38 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".TimetableListActivity">
+        tools:context=".RouteListActivity">
 
     <RadioGroup
-            android:checkedButton="@+id/rb_sunday"
+            android:checkedButton="@+id/direction_group"
             android:id="@+id/direction_group"
-            android:layout_width="297dp"
-            android:layout_height="32dp"
+            android:layout_width="182dp"
+            android:layout_height="31dp"
             android:background="@drawable/rectangle"
             android:orientation="horizontal"
+            app:layout_constraintStart_toStartOf="parent"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginTop="8dp" app:layout_constraintTop_toTopOf="parent" android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/timetableListView">
+            app:layout_constraintBottom_toTopOf="@+id/timetableListView"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            android:layout_marginTop="4dp">
 
         <RadioButton
+                android:layout_marginEnd="1dp"
                 android:layout_marginTop="1dp"
                 android:layout_marginBottom="1dp"
-                android:layout_marginEnd="1dp"
-                android:id="@+id/rb_weekday"
-                android:background="@drawable/selector_style"
+                android:id="@+id/rb_city"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:background="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
-                android:text="@string/Weekday"
+                android:text="@string/to_city"
                 android:checked="true"
                 android:textColor="@color/colorWhite"/>
-        <RadioButton
-                android:layout_marginEnd="1dp"
-                android:layout_marginTop="1dp"
-                android:layout_marginBottom="1dp"
-                android:id="@+id/rb_saturday"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@drawable/selector_style"
-                android:button="@null"
-                android:gravity="center"
-                android:textColor="@color/colorWhite" android:text="@string/Saturday"/>
         <RadioButton
                 android:layout_marginTop="1dp"
                 android:layout_marginBottom="1dp"
@@ -58,27 +48,24 @@
                 android:layout_weight="1"
                 android:button="@null"
                 android:gravity="center"
-                android:text="@string/Sunday"
+                android:text="@string/to_swords"
                 android:textColor="@color/colorWhite"/>
 
     </RadioGroup>
     <android.support.v7.widget.RecyclerView
             android:id="@+id/timetableListView"
             android:layout_width="match_parent"
-            android:layout_height="514dp"
+            android:layout_height="563dp"
             android:layout_alignParentStart="true"
             android:layout_weight="1.05"
             android:foregroundGravity="center"
             android:scrollbars="vertical"
             tools:listitem="@layout/route_list_item"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/direction_group"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintHorizontal_bias="0.0"
-            android:layout_marginBottom="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/direction_group" android:layout_marginTop="8dp">
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp" app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
     </android.support.v7.widget.RecyclerView>
-
 </android.support.constraint.ConstraintLayout>
