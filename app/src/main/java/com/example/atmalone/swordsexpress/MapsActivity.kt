@@ -1,5 +1,6 @@
 package com.example.atmalone.swordsexpress
 
+import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.location.LocationListener
@@ -21,6 +22,7 @@ import com.google.android.gms.maps.model.*
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.tapadoo.alerter.Alerter
 import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.coroutines.experimental.launch
 import okhttp3.Callback
@@ -153,19 +155,27 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
                 var buses = createBusesFromResponseBody(busResponseBody)
 
                 if (buses?.size == 0) {
-                    //todo delete me
-                    val busString =
-                        resources.openRawResource(R.raw.buses)
-                            .bufferedReader().use { it.readText() }
-
-                    buses = createBusesFromResponseBody(busString)
-
-
-                    buses?.let { createBusMarkers(it) }
+//                    //todo delete me
+//                    val busString =
+//                        resources.openRawResource(R.raw.buses)
+//                            .bufferedReader().use { it.readText() }
+//
+//                    buses = createBusesFromResponseBody(busString)
+//
+//
+//                    buses?.let { createBusMarkers(it) }
+                    if(!Alerter.isShowing)
+                        Alerter.create(requireActivity())
+                            .setTitle("Service Unavailable")
+                            .setText("Sorry, there are no buses available at this time")
+                            .enableSwipeToDismiss()
+                            .enableInfiniteDuration(true)
+                            .setBackgroundColorRes(R.color.colorGreen)
+                            .show()
 
                 } else {
-
-                    //todo keep this
+                    if(Alerter.isShowing)
+                        Alerter.clearCurrent(requireActivity())
                     buses?.let {
                         createBusMarkers(it)
                     }
