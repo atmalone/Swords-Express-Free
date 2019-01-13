@@ -1,16 +1,12 @@
 package com.example.atmalone.swordsexpress
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.os.Handler
-import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
 import android.support.v4.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
@@ -216,7 +212,6 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         }
         mBusMap.clear()
         fetchBusDataFromUrl()
-
     }
 
 
@@ -281,9 +276,9 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
 
         mMap.isMyLocationEnabled
 
-        createSwordsMarkers()
+        createCityMarkers()
 
-        val stop = toSwordsStops.first()
+        val stop = toCityStops.last()
         val startPosition = LatLng(stop.lat.toDouble(), stop.long.toDouble())
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPosition, 15f))
 
@@ -326,8 +321,8 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
 
     fun toggleStops() {
         val radioGroup: RadioGroup = direction_group
-        val swordsRadioButton: RadioButton = swords
-        val cityRadioButton: RadioButton = city
+        val swordsRadioButton: RadioButton = rb_swords
+        val cityRadioButton: RadioButton = rb_city
 
         radioGroup.setOnCheckedChangeListener { group, checkedId ->
             when {
@@ -466,7 +461,7 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
                 }
             }
             "503" -> {
-                if (to_swords){
+                if (!to_swords){
                     val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
                     val route: Route? = routes.find { it.title == "waypoints500XfromCity" }
                     val routeEnd: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
@@ -476,7 +471,7 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
                         .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
                     polylines.add(this.mMap.addPolyline(PolylineOptions()
                         .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
-                } else if(!to_swords) {
+                } else if(to_swords) {
                     val routeStart: Route? = routes.find { it.title == "SwordsManorStart" }
                     val routeMid1: Route? = routes.find { it.title == "waypoints500fromSwords" }
                     val routeMid2: Route? = routes.find { it.title == "waypointsPortTunnel3Arena" }
@@ -531,6 +526,29 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
                         .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
                 }
             }
+            "506" -> {
+                if (to_swords) {
+                    val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
+                    val routeMid1: Route? = routes.find { it.title == "waypoints506fromCity" }
+                    val route: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
+                    polylines.add(this.mMap.addPolyline(PolylineOptions()
+                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
+                    polylines.add(this.mMap.addPolyline(PolylineOptions()
+                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
+                    polylines.add(this.mMap.addPolyline(PolylineOptions()
+                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
+                } else if(!to_swords) {
+                    val routeStart: Route? = routes.find { it.title == "HighfieldStart" }
+                    val routeMid1: Route? = routes.find { it.title == "waypoints501fromSwords" }
+                    val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
+                    polylines.add(this.mMap.addPolyline(PolylineOptions()
+                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
+                    polylines.add(this.mMap.addPolyline(PolylineOptions()
+                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
+                    polylines.add(this.mMap.addPolyline(PolylineOptions()
+                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
+                }
+            }
             "507" -> {
                 val routeStart: Route? = routes.find { it.title == "SwordsManorStart" }
                 val routeMid1: Route? = routes.find { it.title == "waypoints507fromSwords" }
@@ -567,6 +585,17 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
                     .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
                 polylines.add(this.mMap.addPolyline(PolylineOptions()
                     .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid2?.value)))
+                polylines.add(this.mMap.addPolyline(PolylineOptions()
+                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
+            }
+            "505X" -> {
+                val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
+//                val routeMid1: Route? = routes.find { it.title == "waypoints505XfromCity" }
+                val routeEnd: Route? = routes.find { it.title == "waypoints505XfromCity" }
+                polylines.add(this.mMap.addPolyline(PolylineOptions()
+                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
+//                polylines.add(this.mMap.addPolyline(PolylineOptions()
+//                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
                 polylines.add(this.mMap.addPolyline(PolylineOptions()
                     .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
             }

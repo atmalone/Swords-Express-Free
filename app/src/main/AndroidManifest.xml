@@ -44,7 +44,6 @@
         <activity
                 android:name=".MainActivity"
                 android:label="@string/SwordsExpress"
-
                 android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -53,6 +52,13 @@
             </intent-filter>
         </activity>
         <activity android:name=".TimetableListActivity">
+        </activity>
+        <activity android:name=".RouteListActivity">
+        </activity>
+        <activity
+                android:name=".Main2Activity"
+                android:label="@string/title_activity_main2"
+                android:theme="@style/AppTheme.NoActionBar">
         </activity>
     </application>
 

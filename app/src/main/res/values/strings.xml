@@ -1,11 +1,15 @@
 <resources>
-    <string name="app_name">SwordsExpress</string>
+    <string name="app_name">Swords Express</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="action_settings">Settings</string>
     <string name="map_tab">Map</string>
-    <string name="info_tab">Information</string>
+    <string name="timetables_tab">Timetables</string>
     <string name="to_swords">To Swords</string>
     <string name="to_city">To City</string>
     <string name="SwordsExpress">Swords Express</string>
+    <string name="Weekday">Weekday</string>
+    <string name="Saturday">Saturday</string>
+    <string name="Sunday">Sunday</string>
+    <string name="title_activity_main2">Main2Activity</string>
 </resources>
