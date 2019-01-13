@@ -1,18 +1,17 @@
 package com.example.atmalone.swordsexpress
 
 import android.util.Log
-import com.google.android.gms.maps.model.LatLng
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import java.lang.reflect.Type
 
-class TimetableRouteListDeserializer: JsonDeserializer<TimetableRoute> {
-    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): TimetableRoute {
+class TimetableRouteListDeserializer: JsonDeserializer<TimetableRouteTitle> {
+    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): TimetableRouteTitle {
         val jsonObj = json as JsonObject
 
-        val timetableRoute = TimetableRoute()
+        val timetableRoute = TimetableRouteTitle()
 
         val jsonRouteDirectionTitle = jsonObj.get("title")
         val jsonRouteStopsTitle = jsonObj.getAsJsonArray("value")
@@ -20,12 +19,12 @@ class TimetableRouteListDeserializer: JsonDeserializer<TimetableRoute> {
         try {
             timetableRoute.title = jsonRouteDirectionTitle.asString
             jsonRouteStopsTitle.forEach { routeStop ->
-                var routestopTitle = routeStop.asJsonObject.get("title").asString
-                timetableRoute.value.add(routestopTitle)
+                var routeStopTitle = routeStop.asJsonObject.get("title").asString
+                timetableRoute.value.add(routeStopTitle)
             }
         }
         catch (e: Exception){
-            Log.e("RouteSerialiser","failed to serialise routes.")
+            Log.e("TimetableDeserializer","failed to serialise routes.")
             e.printStackTrace()
         }
         return timetableRoute

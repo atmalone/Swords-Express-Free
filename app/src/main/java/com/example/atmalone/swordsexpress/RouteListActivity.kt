@@ -1,9 +1,9 @@
 package com.example.atmalone.swordsexpress
 
 
+import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -12,16 +12,17 @@ import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import com.google.gson.GsonBuilder
-import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.android.synthetic.main.activity_route_list.*
 import kotlinx.android.synthetic.main.activity_route_list.view.*
 
 class RouteListActivity : Fragment() {
 
-    private var mAdapter: TimetableAdapter = TimetableAdapter()
+    private var mAdapter: RouteListAdapter = RouteListAdapter(false)
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var listOfStopsToSwords : MutableList<String>
     private lateinit var listOfStopsToCity: MutableList<String>
     var to_swords: Boolean = false
+    private lateinit var mContext: Context
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -30,7 +31,7 @@ class RouteListActivity : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        mRecyclerView = view!!.timetableListView
+        mRecyclerView = view!!.routeListView
         val mLayoutManager = LinearLayoutManager(context)
         mRecyclerView.layoutManager = mLayoutManager
         mRecyclerView.adapter = mAdapter
@@ -44,14 +45,19 @@ class RouteListActivity : Fragment() {
 
     fun getRouteObjectsFromJsonArray(to_swords: Boolean) {
         val gsonBuilder = GsonBuilder().serializeNulls()
-        gsonBuilder.registerTypeAdapter(TimetableRoute::class.java, TimetableRouteListDeserializer())
+        gsonBuilder.registerTypeAdapter(TimetableRouteTitle::class.java, TimetableRouteListDeserializer())
         val gson = gsonBuilder.create()
 
         val timetableRouteList = gson.fromJson(resources.openRawResource(R.raw.timetable_stops)
-            .bufferedReader().use { it.readText() }, Array<TimetableRoute>::class.java).toList()
+            .bufferedReader().use { it.readText() }, Array<TimetableRouteTitle>::class.java)
+            .toList()
+
 
         listOfStopsToSwords = timetableRouteList.get(0).value
+        listOfStopsToSwords.sort()
+
         listOfStopsToCity = timetableRouteList.get(1).value
+        listOfStopsToCity.sort()
 
         if(to_swords)
             mAdapter.addAll(listOfStopsToSwords)
@@ -60,9 +66,9 @@ class RouteListActivity : Fragment() {
     }
 
     fun toggleStops() {
-        val radioGroup: RadioGroup = direction_group
-        val swordsRadioButton: RadioButton = rb_sunday
-        val cityRadioButton: RadioButton = city
+        val radioGroup: RadioGroup = route_direction_group
+        val swordsRadioButton: RadioButton = route_rb_swords
+        val cityRadioButton: RadioButton = route_rb_city
 
         radioGroup.setOnCheckedChangeListener { group, checkedId ->
             when {

@@ -1,6 +1,6 @@
 [
   {
-	"title": "abbeyvale",
+	"title": "Abbeyvale",
 	"value": {
       "weekday": [
         {
@@ -203,7 +203,7 @@
     }
   },
   {
-	"title": "swordsManor",
+	"title": "SwordsManor",
 	"value": {
     "weekday": [
   {
@@ -303,7 +303,7 @@
   },
 
   {
-	"title": "valleyView",
+	"title": "ValleyView",
 	"value": {
   "weekday": [
     {
@@ -402,7 +402,7 @@
 }
 },
   {
-	"title": "theGallops",
+	"title": "TheGallops",
 	"value": {
     "weekday": [
     {
@@ -500,7 +500,7 @@
     }
   ]
 },
-  { "title": "liosCian",
+  { "title": "LiosCian",
 	"value": {
     "weekday": [
       {
@@ -599,7 +599,7 @@
     }
 },
 {
-	"title": "cianlea",
+	"title": "Cianlea",
 	"value": {
 		 "weekday" : [
     {
@@ -698,7 +698,7 @@
 }
 },
 {
-	"title": "laurelton",
+	"title": "Laurelton",
     "value": {
     "weekday" : [
     {
@@ -796,9 +796,8 @@
   ]
 }
 },
-
 {
-	"title": "swordsEducateTogether",
+	"title": "SwordsEducateTogether",
 	"value": {
     "weekday" : [
       {

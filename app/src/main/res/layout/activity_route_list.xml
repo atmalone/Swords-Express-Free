@@ -8,8 +8,8 @@
         tools:context=".RouteListActivity">
 
     <RadioGroup
-            android:checkedButton="@+id/direction_group"
-            android:id="@+id/direction_group"
+            android:checkedButton="@+id/route_direction_group"
+            android:id="@+id/route_direction_group"
             android:layout_width="182dp"
             android:layout_height="31dp"
             android:background="@drawable/rectangle"
@@ -18,16 +18,17 @@
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/timetableListView"
+            app:layout_constraintBottom_toTopOf="@+id/routeListView"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0"
-            android:layout_marginTop="4dp">
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp">
 
         <RadioButton
                 android:layout_marginEnd="1dp"
                 android:layout_marginTop="1dp"
                 android:layout_marginBottom="1dp"
-                android:id="@+id/rb_city"
+                android:id="@+id/route_rb_city"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -41,7 +42,7 @@
                 android:layout_marginTop="1dp"
                 android:layout_marginBottom="1dp"
                 android:layout_marginEnd="1dp"
-                android:id="@+id/rb_sunday"
+                android:id="@+id/route_rb_swords"
                 android:background="@drawable/selector_style"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -53,19 +54,22 @@
 
     </RadioGroup>
     <android.support.v7.widget.RecyclerView
-            android:id="@+id/timetableListView"
+            android:id="@+id/routeListView"
             android:layout_width="match_parent"
             android:layout_height="563dp"
             android:layout_alignParentStart="true"
             android:layout_weight="1.05"
             android:foregroundGravity="center"
             android:scrollbars="vertical"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
             tools:listitem="@layout/route_list_item"
-            app:layout_constraintTop_toBottomOf="@+id/direction_group"
+            app:layout_constraintTop_toBottomOf="@+id/route_direction_group"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp" app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintBottom_toBottomOf="parent">
     </android.support.v7.widget.RecyclerView>
 </android.support.constraint.ConstraintLayout>

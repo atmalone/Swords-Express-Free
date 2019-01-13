@@ -1,7 +1,6 @@
 package com.example.atmalone.swordsexpress
 
-class TimetableRoute {
+class TimetableRouteTitle {
     var title : String = ""
     var value : MutableList<String> = ArrayList()
-
 }
