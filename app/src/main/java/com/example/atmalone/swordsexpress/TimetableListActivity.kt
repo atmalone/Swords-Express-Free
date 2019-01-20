@@ -81,19 +81,6 @@ class TimetableListActivity : AppCompatActivity() {
             listOfTimetables?.addAll(timetable.values)
             mAdapter.addAll(timetable.values)
         }
-
-
-//        when {
-//            (weekSelection == 0) -> {
-//                mAdapter.addAll(listOfWeekdayTimetables)
-//            }
-//            (weekSelection == 1) -> {
-//                mAdapter.addAll(listOfSaturdayTimetables)
-//            }
-//            (weekSelection == 2) -> {
-//                mAdapter.addAll(listOfSundayTimetables)
-//            }
-//        }
     }
 
     fun toggleWeek() {

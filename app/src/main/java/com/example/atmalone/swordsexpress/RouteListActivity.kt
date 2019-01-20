@@ -17,7 +17,7 @@ import kotlinx.android.synthetic.main.activity_route_list.view.*
 
 class RouteListActivity : Fragment() {
 
-    private var mAdapter: RouteListAdapter = RouteListAdapter(false)
+    private var mAdapter = RouteListAdapter()
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var listOfStopsToSwords : MutableList<String>
     private lateinit var listOfStopsToCity: MutableList<String>
@@ -74,6 +74,7 @@ class RouteListActivity : Fragment() {
             when {
                 (cityRadioButton.isChecked) -> {
                     to_swords = false
+                    mAdapter.setDirection(to_swords)
                     listOfStopsToCity.clear()
                     getRouteObjectsFromJsonArray(to_swords)
                     mAdapter.notifyDataSetChanged()
@@ -82,6 +83,7 @@ class RouteListActivity : Fragment() {
                 }
                 (swordsRadioButton.isChecked) -> {
                     to_swords = true
+                    mAdapter.setDirection(to_swords)
                     listOfStopsToSwords.clear()
                     getRouteObjectsFromJsonArray(to_swords)
                     mAdapter.notifyDataSetChanged()

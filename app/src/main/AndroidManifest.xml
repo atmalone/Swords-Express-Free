@@ -33,7 +33,7 @@
                 android:value="@string/google_maps_key"/>
 
         <activity
-                android:name=".MapsActivity"
+                android:name=".MapsFragment"
                 android:label="@string/title_activity_maps">
         </activity>
 
@@ -54,6 +54,10 @@
         <activity android:name=".TimetableListActivity">
         </activity>
         <activity android:name=".RouteListActivity">
+        </activity>
+        <activity
+                android:name=".MapsActivity2"
+                android:label="@string/title_activity_maps2">
         </activity>
     </application>
 

@@ -1,19 +1,23 @@
 package com.example.atmalone.swordsexpress
 
-import android.app.Activity
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
-import android.location.LocationListener
+import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
 import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -33,19 +37,16 @@ import java.util.*
 import kotlin.collections.HashMap
 import kotlin.concurrent.scheduleAtFixedRate
 
-
-class MapsActivity : Fragment(), OnMapReadyCallback {
+class MapsFragment : Fragment(), OnMapReadyCallback {
     private val url = "https://www.swordsexpress.com/latlong.php"
 
     private lateinit var mFirebaseAnalytics: FirebaseAnalytics
     private lateinit var mMap: GoogleMap
     private lateinit var toSwordsStops: Array<StopInfo>
     private lateinit var toCityStops: Array<StopInfo>
-
     private var mHandler = Handler()
     private lateinit var mRunnable: Runnable
 //    var lat = 0.0
-
     var to_swords: Boolean = true
     private val mStopMap = HashMap<String, Marker>()
     var polylines = mutableListOf<Polyline>()
@@ -53,14 +54,16 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
     private var busResponseBody: String? = ""
     val pattern: PatternItem = Dot()
     val patternList = mutableListOf<PatternItem>()
-    val locationListener: LocationListener? = null
-    val locationManager: LocationManager? = null
-    val REQUEST_READ_EXTERNAL = 1
-    private val LOCATION_PERMISSION_REQUEST_CODE = 1
-    private val mPermissionDenied = false
+    private var mLocationPermissionGranted = false
+    private var locationManager : LocationManager? = null
+    private val TAG = "Location Permission"
+    private lateinit var lastLocation: Location
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this.requireActivity())
+        setupPermissions()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this.requireActivity())
         return inflater.inflate(R.layout.activity_maps, container, false)!!
     }
 
@@ -68,32 +71,39 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState)
         val supportMapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         supportMapFragment.getMapAsync(this)
-
-        patternList.add(pattern)
         launch {
             fetchBusDataFromUrl()
             getRouteObjectsFromJsonArray()
         }
-
+        patternList.add(pattern)
         toggleStops()
     }
 
-//    private fun enableMyLocation() {
-//        if (ContextCompat.checkSelfPermission(
-//                this.requireActivity(),
-//                Manifest.permission.ACCESS_FINE_LOCATION
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            // Permission to access the location is missing.
-//            ActivityCompat.requestPermission(
-//                this, LOCATION_PERMISSION_REQUEST_CODE,
-//                Manifest.permission.ACCESS_FINE_LOCATION, true
-//            )
-//        } else if (mMap != null) {
-//            // Access to the location has been granted to the app.
-//            mMap.isMyLocationEnabled = true
-//        }
-//    }
+    private fun setupPermissions() {
+        if (ContextCompat.checkSelfPermission(this.requireContext(),
+            android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this.requireContext(),
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE)
+        } else {
+            Log.e("PERMISSION", "PERMISSION GRANTED")
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            when (grantResults[0]) {
+                PackageManager.PERMISSION_GRANTED -> {
+                    setUpMap()
+                }
+                PackageManager.PERMISSION_DENIED -> setupPermissions()
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+    }
 
     private fun createBusesFromResponseBody(busResponseBodyText: String?): List<BusInfo>? {
         if (!busResponseBodyText.isNullOrEmpty()) {
@@ -272,6 +282,24 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
         return mMap.addMarker(markerOption)
     }
 
+    private fun setUpMap() {
+        if (ContextCompat.checkSelfPermission(this.requireContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mMap.isMyLocationEnabled = true
+
+            fusedLocationClient.lastLocation.addOnSuccessListener(this.requireActivity()) { location ->
+
+                if (location != null) {
+                    lastLocation = location
+                    val currentLatLng = LatLng(location.latitude, location.longitude)
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
+                }
+            }
+            return
+        }
+
+    }
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -283,8 +311,6 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
-        mMap.isMyLocationEnabled
 
         createCityMarkers()
 
@@ -306,8 +332,10 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
             .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
 
         routeRadioButtonGroupListener(routes)
+        setUpMap()
 
     }
+
 
     fun getRouteObjectsFromJsonArray(): List<Route> {
         val gsonBuilder = GsonBuilder().serializeNulls()
@@ -614,5 +642,9 @@ class MapsActivity : Fragment(), OnMapReadyCallback {
     } catch (e: Exception){
         e.printStackTrace()
     }
+    }
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
     }
 }

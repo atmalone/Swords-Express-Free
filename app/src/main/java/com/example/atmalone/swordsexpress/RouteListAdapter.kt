@@ -11,15 +11,20 @@ import android.view.ViewGroup
 import android.widget.TextView
 import java.util.*
 
-class RouteListAdapter(direction: Boolean) : RecyclerView.Adapter<RouteListAdapter.ViewHolder>() {
+class RouteListAdapter() : RecyclerView.Adapter<RouteListAdapter.ViewHolder>() {
 
     private var routeList: MutableList<String> = ArrayList()
     private lateinit var mContext: Context
-    private var mDirection = direction
+    private var mDirection = false
 
     internal fun addAll(list: MutableList<String>) {
         routeList = list
     }
+
+    internal fun setDirection(direction: Boolean) {
+        mDirection = direction
+    }
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
