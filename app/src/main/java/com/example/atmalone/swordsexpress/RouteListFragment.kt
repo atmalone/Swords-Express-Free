@@ -15,7 +15,7 @@ import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_route_list.*
 import kotlinx.android.synthetic.main.activity_route_list.view.*
 
-class RouteListActivity : Fragment() {
+class RouteListFragment : Fragment() {
 
     private var mAdapter = RouteListAdapter()
     private lateinit var mRecyclerView: RecyclerView
