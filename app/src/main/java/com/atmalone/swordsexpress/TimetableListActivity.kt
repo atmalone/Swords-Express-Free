@@ -1,4 +1,4 @@
-package com.example.atmalone.swordsexpress
+package com.atmalone.swordsexpress
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -6,28 +6,20 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
 import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_timetable_list.*
 
 class TimetableListActivity : AppCompatActivity() {
-//    override fun getIntent(): Intent {
-//        val intentTitleExtra:String = intent.getStringExtra(STOP_TITLE)
-//        val intentDirectionExtra:Boolean = intent.getBooleanExtra(DIRECTION, false)
-//        return super.getIntent()
-//    }
-//
-//    override fun <T : ExtraData?> getExtraData(extraDataClass: Class<T>?): T {
-//        val intentTitleExtra:String = intent.getStringExtra(STOP_TITLE)
-//        val intentDirectionExtra:Boolean = intent.getBooleanExtra(DIRECTION, false)
-//        return super.getExtraData(extraDataClass)
-//    }
-
     private var mAdapter: TimetableListAdapter = TimetableListAdapter(this)
     private lateinit var mRecyclerView: RecyclerView
     private var listOfTimetables = mutableListOf<TimetableItem>()
     private var weekSelection: Int = 0
     private var mStopTitle = ""
     private var mToSwords: Boolean = false
+    lateinit var mAdView : AdView
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,28 +35,11 @@ class TimetableListActivity : AppCompatActivity() {
         toggleWeek()
     }
 
-//    override fun onCreate(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-//        val view = inflater.inflate(R.layout.activity_timetable_list, container, false)
-//        val intentTitleExtra:String = activity?.intent?.getStringExtra(STOP_TITLE) ?: "Abbeyvale"
-//        val intentDirectionExtra:Boolean = activity?.intent?.getBooleanExtra(DIRECTION, false) ?: false
-//        mStopTitle = intentTitleExtra
-//        mToSwords = intentDirectionExtra
-//        return view
-//    }
-
-//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//        super.onViewCreated(view, savedInstanceState)
-//        toggleWeek()
-//        getTimetableObjectsFromJsonArray(weekSelection)
-//    }
-
-//    override fun onActivityCreated(savedInstanceState: Bundle?) {
-//        super.onActivityCreated(savedInstanceState)
-//        mRecyclerView = view!!.timetableListView
-//        val mLayoutManager = LinearLayoutManager(context)
-//        mRecyclerView.layoutManager = mLayoutManager
-//        mRecyclerView.adapter = mAdapter
-//    }
+    override fun onStart() {
+        super.onStart()
+        mAdView = findViewById(R.id.adView)
+        val adRequest = AdRequest.Builder().build()
+        mAdView.loadAd(adRequest)   }
 
     fun getTimetableObjectsFromJsonArray(weekSelection: Int) {
         val gsonBuilder = GsonBuilder().serializeNulls()
@@ -78,7 +53,7 @@ class TimetableListActivity : AppCompatActivity() {
         var timetable = timetableRouteList.find { it.title == mStopTitle }
 
         if (timetable != null) {
-            listOfTimetables?.addAll(timetable.values)
+            listOfTimetables.addAll(timetable.values)
             mAdapter.addAll(timetable.values)
         }
     }

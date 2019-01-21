@@ -1,4 +1,4 @@
-package com.example.atmalone.swordsexpress
+package com.atmalone.swordsexpress
 
 import android.support.v7.app.AppCompatActivity
 
@@ -9,6 +9,9 @@ import android.os.Bundle
 import android.support.design.widget.TabLayout
 import android.view.Menu
 import android.view.MenuItem
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -28,6 +31,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        MobileAds.initialize(this,
+            "ca-app-pub-3940256099942544~3347511713")
+
         setSupportActionBar(toolbar)
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -38,7 +44,6 @@ class MainActivity : AppCompatActivity() {
 
         container.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabs))
         tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
-
     }
 
 

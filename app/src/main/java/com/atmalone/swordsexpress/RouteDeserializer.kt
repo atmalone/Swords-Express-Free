@@ -1,4 +1,4 @@
-package com.example.atmalone.swordsexpress
+package com.atmalone.swordsexpress
 
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
@@ -21,7 +21,7 @@ class RouteDeserializer : JsonDeserializer<Route> {
             route.title = jsonRouteTitle.asString
             jsonCoordinatesArray.forEach { point ->
                 var routeLatLng = LatLng(point.asJsonObject.get("lat").asDouble, point.asJsonObject.get("lng").asDouble)
-                route.value?.add(routeLatLng)
+                route.value.add(routeLatLng)
             }
         } catch (e: Exception){
             Log.e("RouteSerialiser","failed to serialise routes.")

@@ -1,4 +1,4 @@
-package com.example.atmalone.swordsexpress
+package com.atmalone.swordsexpress
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -16,6 +16,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -27,7 +29,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.tapadoo.alerter.Alerter
-import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.android.synthetic.main.fragment_maps.*
 import kotlinx.coroutines.experimental.launch
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -54,22 +56,27 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     private var busResponseBody: String? = ""
     val pattern: PatternItem = Dot()
     val patternList = mutableListOf<PatternItem>()
-    private var mLocationPermissionGranted = false
-    private var locationManager : LocationManager? = null
     private val TAG = "Location Permission"
     private lateinit var lastLocation: Location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    lateinit var mAdView : AdView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this.requireActivity())
+
+//        MobileAds.initialize(this.requireContext(), "ADMOB_APP_ID");
+
         setupPermissions()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this.requireActivity())
-        return inflater.inflate(R.layout.activity_maps, container, false)!!
+        return inflater.inflate(R.layout.fragment_maps, container, false)!!
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val supportMapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+
+        mAdView = Helpers.fragmentAdHelper(view)
+
         supportMapFragment.getMapAsync(this)
         launch {
             fetchBusDataFromUrl()
@@ -88,7 +95,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 LOCATION_PERMISSION_REQUEST_CODE)
         } else {
-            Log.e("PERMISSION", "PERMISSION GRANTED")
+            Log.e(TAG, "PERMISSION GRANTED")
         }
     }
 
@@ -233,6 +240,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         mBusMap.clear()
         fetchBusDataFromUrl()
     }
+
 
 
     private fun createSwordsMarkers() {

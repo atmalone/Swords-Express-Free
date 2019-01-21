@@ -1,4 +1,4 @@
-package com.example.atmalone.swordsexpress
+package com.atmalone.swordsexpress
 
 import android.util.Log
 import com.google.gson.JsonDeserializationContext

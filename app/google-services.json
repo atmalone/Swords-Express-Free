@@ -41,7 +41,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:515114621902:android:6fb12316fd63fe80",
         "android_client_info": {
-          "package_name": "com.example.atmalone.swordsexpress"
+          "package_name": "com.atmalone.swordsexpress"
         }
       },
       "oauth_client": [
@@ -49,7 +49,7 @@
           "client_id": "515114621902-lnc0q61avtpt3qmoc92t3bvnrm8bk1qn.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.atmalone.swordsexpress",
+            "package_name": "com.atmalone.swordsexpress",
             "certificate_hash": "5545d3b1cba206213246b943fd906f27ea6b18d2"
           }
         },

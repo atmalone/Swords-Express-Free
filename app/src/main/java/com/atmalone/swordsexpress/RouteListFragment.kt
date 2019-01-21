@@ -1,4 +1,4 @@
-package com.example.atmalone.swordsexpress
+package com.atmalone.swordsexpress
 
 
 import android.content.Context
@@ -11,6 +11,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
 import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_route_list.*
 import kotlinx.android.synthetic.main.activity_route_list.view.*
@@ -23,7 +25,7 @@ class RouteListFragment : Fragment() {
     private lateinit var listOfStopsToCity: MutableList<String>
     var to_swords: Boolean = false
     private lateinit var mContext: Context
-
+    lateinit var mAdView : AdView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.activity_route_list, container, false)
@@ -41,6 +43,7 @@ class RouteListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         getRouteObjectsFromJsonArray(to_swords)
+        mAdView = Helpers.fragmentAdHelper(view)
     }
 
     fun getRouteObjectsFromJsonArray(to_swords: Boolean) {
