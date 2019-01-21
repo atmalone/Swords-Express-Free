@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         MobileAds.initialize(this,
-            "ca-app-pub-3940256099942544~3347511713")
+            "ca-app-pub-1735218136968931~6831557926")
 
         setSupportActionBar(toolbar)
         // Create the adapter that will return a fragment for each of the three
