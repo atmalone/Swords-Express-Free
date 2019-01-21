@@ -1,4 +1,4 @@
-package com.example.atmalone.swordsexpress
+package com.atmalone.swordsexpress
 
 
 import android.content.Context
@@ -11,19 +11,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
 import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_route_list.*
 import kotlinx.android.synthetic.main.activity_route_list.view.*
 
-class RouteListActivity : Fragment() {
+class RouteListFragment : Fragment() {
 
-    private var mAdapter: RouteListAdapter = RouteListAdapter(false)
+    private var mAdapter = RouteListAdapter()
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var listOfStopsToSwords : MutableList<String>
     private lateinit var listOfStopsToCity: MutableList<String>
     var to_swords: Boolean = false
     private lateinit var mContext: Context
-
+    lateinit var mAdView : AdView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.activity_route_list, container, false)
@@ -41,6 +43,7 @@ class RouteListActivity : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         getRouteObjectsFromJsonArray(to_swords)
+        mAdView = Helpers.fragmentAdHelper(view)
     }
 
     fun getRouteObjectsFromJsonArray(to_swords: Boolean) {
@@ -74,6 +77,7 @@ class RouteListActivity : Fragment() {
             when {
                 (cityRadioButton.isChecked) -> {
                     to_swords = false
+                    mAdapter.setDirection(to_swords)
                     listOfStopsToCity.clear()
                     getRouteObjectsFromJsonArray(to_swords)
                     mAdapter.notifyDataSetChanged()
@@ -82,6 +86,7 @@ class RouteListActivity : Fragment() {
                 }
                 (swordsRadioButton.isChecked) -> {
                     to_swords = true
+                    mAdapter.setDirection(to_swords)
                     listOfStopsToSwords.clear()
                     getRouteObjectsFromJsonArray(to_swords)
                     mAdapter.notifyDataSetChanged()

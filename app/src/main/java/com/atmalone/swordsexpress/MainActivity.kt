@@ -1,22 +1,15 @@
-package com.example.atmalone.swordsexpress
+package com.atmalone.swordsexpress
 
-import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
-
+import android.os.Bundle
+import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
-import android.support.v4.view.ViewPager
-import android.os.Bundle
-import android.support.design.widget.TabLayout
-import android.view.LayoutInflater
+import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
-
+import com.google.android.gms.ads.MobileAds
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_main.view.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -34,6 +27,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        MobileAds.initialize(this,
+            "ca-app-pub-1735218136968931~6831557926")
+
         setSupportActionBar(toolbar)
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -44,7 +40,6 @@ class MainActivity : AppCompatActivity() {
 
         container.addOnPageChangeListener(TabLayout.TabLayoutOnPageChangeListener(tabs))
         tabs.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
-
     }
 
 
@@ -60,13 +55,12 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         val id = item.itemId
 
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_tickets_and_fares) {
             return true
         }
 
         return super.onOptionsItemSelected(item)
     }
-
 
     /**
      * A [FragmentPagerAdapter] that returns a fragment corresponding to
@@ -77,10 +71,10 @@ class MainActivity : AppCompatActivity() {
         override fun getItem(position: Int): Fragment? {
             return when(position) {
                 0 -> {
-                    MapsActivity()
+                    MapsFragment()
                 }
                 1 -> {
-                    RouteListActivity()
+                    RouteListFragment()
                 }
                 else -> null
             }

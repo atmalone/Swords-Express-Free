@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.example.atmalone.swordsexpress">
+          package="com.atmalone.swordsexpress">
 
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
@@ -29,11 +29,15 @@
              You can define the keys for the debug and release targets in src/debug/ and src/release/. 
         -->
         <meta-data
+                android:name="com.google.android.gms.ads.APPLICATION_ID"
+                android:value="ca-app-pub-1735218136968931~6831557926"/>
+
+        <meta-data
                 android:name="com.google.android.geo.API_KEY"
                 android:value="@string/google_maps_key"/>
 
         <activity
-                android:name=".MapsActivity"
+                android:name=".MapsFragment"
                 android:label="@string/title_activity_maps">
         </activity>
 
@@ -53,12 +57,7 @@
         </activity>
         <activity android:name=".TimetableListActivity">
         </activity>
-        <activity android:name=".RouteListActivity">
-        </activity>
-        <activity
-                android:name=".Main2Activity"
-                android:label="@string/title_activity_main2"
-                android:theme="@style/AppTheme.NoActionBar">
+        <activity android:name=".RouteListFragment">
         </activity>
     </application>
 

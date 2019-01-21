@@ -1,4 +1,4 @@
-package com.example.atmalone.swordsexpress
+package com.atmalone.swordsexpress
 
 import android.util.Log
 import com.google.gson.JsonDeserializationContext
@@ -12,7 +12,6 @@ class TimetableDeserializer: JsonDeserializer<Timetable> {
         val jsonObj = json as JsonObject
 
         var timetableRoute = Timetable()
-        var timetableItems: MutableList<TimetableItem>? = null
         var timetableItem: TimetableItem? = null
 
         val jsonRouteDirectionTitle = jsonObj.get("title")

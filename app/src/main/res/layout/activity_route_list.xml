@@ -5,14 +5,13 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".RouteListActivity">
+        tools:context=".RouteListFragment">
 
     <RadioGroup
             android:checkedButton="@+id/route_direction_group"
             android:id="@+id/route_direction_group"
             android:layout_width="182dp"
             android:layout_height="31dp"
-            android:background="@drawable/rectangle"
             android:orientation="horizontal"
             app:layout_constraintStart_toStartOf="parent"
             android:layout_marginStart="8dp"
@@ -21,7 +20,7 @@
             app:layout_constraintBottom_toTopOf="@+id/routeListView"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:layout_marginBottom="4dp">
 
         <RadioButton
@@ -36,8 +35,7 @@
                 android:button="@null"
                 android:gravity="center"
                 android:text="@string/to_city"
-                android:checked="true"
-                android:textColor="@color/colorWhite"/>
+                android:checked="true"/>
         <RadioButton
                 android:layout_marginTop="1dp"
                 android:layout_marginBottom="1dp"
@@ -49,27 +47,41 @@
                 android:layout_weight="1"
                 android:button="@null"
                 android:gravity="center"
-                android:text="@string/to_swords"
-                android:textColor="@color/colorWhite"/>
+                android:text="@string/to_swords"/>
 
     </RadioGroup>
     <android.support.v7.widget.RecyclerView
             android:id="@+id/routeListView"
             android:layout_width="match_parent"
-            android:layout_height="563dp"
+            android:layout_height="0dp"
             android:layout_alignParentStart="true"
             android:layout_weight="1.05"
             android:foregroundGravity="center"
             android:scrollbars="vertical"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
             tools:listitem="@layout/route_list_item"
             app:layout_constraintTop_toBottomOf="@+id/route_direction_group"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintBottom_toBottomOf="parent">
+            android:layout_marginBottom="8dp" app:layout_constraintBottom_toTopOf="@+id/adView">
     </android.support.v7.widget.RecyclerView>
+    <com.google.android.gms.ads.AdView
+            xmlns:ads="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/adView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            ads:adSize="SMART_BANNER"
+            ads:adUnitId="ca-app-pub-3940256099942544/6300978111"
+            ads:layout_constraintStart_toStartOf="parent"
+            ads:layout_constraintEnd_toEndOf="parent"
+            ads:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="8dp"
+            ads:layout_constraintTop_toTopOf="parent"
+            ads:layout_constraintVertical_bias="1.0"
+    >
+    </com.google.android.gms.ads.AdView>
 </android.support.constraint.ConstraintLayout>
