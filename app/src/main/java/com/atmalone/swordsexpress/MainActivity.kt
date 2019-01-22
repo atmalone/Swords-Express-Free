@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentPagerAdapter
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.MobileAds
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -27,9 +28,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        MobileAds.initialize(this,
-            "ca-app-pub-1735218136968931~6831557926")
-
+        if(BuildConfig.DEBUG) {
+            MobileAds.initialize(
+                this,
+                TEST_ADMOB_APP_ID)
+        }
+        else{
+            MobileAds.initialize(
+                this,
+                ADMOB_APP_ID)
+        }
         setSupportActionBar(toolbar)
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.

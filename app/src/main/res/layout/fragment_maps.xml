@@ -14,12 +14,11 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             tools:context=".MapsFragment"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintVertical_bias="0.0"/>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/adView"
+            app:layout_constraintVertical_bias="1.0"/>
     <RadioGroup
             android:checkedButton="@+id/route_rb_swords"
             android:id="@+id/direction_group"
@@ -44,6 +43,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="@string/to_city"
@@ -54,6 +54,7 @@
                 android:layout_marginLeft="1dp"
                 android:id="@+id/rb_swords"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -74,7 +75,7 @@
             android:checkedButton="@+id/rb500"
             android:layout_marginTop="8dp"
             app:layout_constraintTop_toBottomOf="@+id/direction_group"
-            app:layout_constraintBottom_toBottomOf="@+id/map"
+            app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginBottom="8dp"
             app:layout_constraintVertical_bias="0.0">
 
@@ -89,6 +90,7 @@
                 android:button="@null"
                 android:gravity="center"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:text="500"
                 android:checked="true"/>
         <RadioButton
@@ -100,6 +102,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="501"/>
@@ -112,6 +115,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="502"/>
@@ -124,6 +128,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="503"/>
@@ -136,6 +141,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="504"/>
@@ -148,6 +154,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="505"/>
@@ -160,6 +167,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="507"/>
@@ -172,6 +180,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="500X"/>
@@ -190,7 +199,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             app:layout_constraintTop_toBottomOf="@+id/direction_group"
-            app:layout_constraintBottom_toBottomOf="@+id/map"
+            app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginBottom="8dp"
             app:layout_constraintVertical_bias="0.0">
 
@@ -203,6 +212,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="500"
@@ -216,6 +226,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="503"/>
@@ -228,6 +239,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="506"/>
@@ -240,6 +252,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="500X"/>
@@ -252,6 +265,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="501X"/>
@@ -264,6 +278,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/selector_style"
+                android:textColor="@drawable/selector_style"
                 android:button="@null"
                 android:gravity="center"
                 android:text="505X"/>
@@ -272,7 +287,6 @@
             xmlns:ads="http://schemas.android.com/apk/res-auto"
             android:id="@+id/adView"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_alignParentBottom="true"
             ads:adSize="SMART_BANNER"
@@ -280,9 +294,9 @@
             ads:layout_constraintStart_toStartOf="parent"
             ads:layout_constraintEnd_toEndOf="parent"
             ads:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginTop="8dp"
-            ads:layout_constraintTop_toTopOf="parent"
-            ads:layout_constraintVertical_bias="0.9">
+            ads:adSize="SMART_BANNER"
+            ads:adUnitId="ca-app-pub-1735218136968931/7578443635"
+            android:layout_height="wrap_content">
     </com.google.android.gms.ads.AdView>
 
 
