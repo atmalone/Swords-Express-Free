@@ -35,82 +35,8 @@
         "ads_service": {
           "status": 2
         }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:515114621902:android:97d267420f7bf4ac",
-        "android_client_info": {
-          "package_name": "com.example.andrewmalone.swordsexpress"
-        }
       },
-      "oauth_client": [
-        {
-          "client_id": "515114621902-r778ku22b9dvec6c51h5sepcd8beeih1.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBXafbMWNHYk7z32V8H-zSyJWORwTVmKZE"
-        }
-      ],
-      "services": {
-        "analytics_service": {
-          "status": 1
-        },
-        "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
-        },
-        "ads_service": {
-          "status": 2
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:515114621902:android:6fb12316fd63fe80",
-        "android_client_info": {
-          "package_name": "com.example.atmalone.swordsexpress"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "515114621902-lnc0q61avtpt3qmoc92t3bvnrm8bk1qn.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.atmalone.swordsexpress",
-            "certificate_hash": "5545d3b1cba206213246b943fd906f27ea6b18d2"
-          }
-        },
-        {
-          "client_id": "515114621902-r778ku22b9dvec6c51h5sepcd8beeih1.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBXafbMWNHYk7z32V8H-zSyJWORwTVmKZE"
-        }
-      ],
-      "services": {
-        "analytics_service": {
-          "status": 1
-        },
-        "appinvite_service": {
-          "status": 2,
-          "other_platform_oauth_client": [
-            {
-              "client_id": "515114621902-r778ku22b9dvec6c51h5sepcd8beeih1.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        },
-        "ads_service": {
-          "status": 2
-        }
-      }
+      "admob_app_id": "ca-app-pub-1735218136968931~6831557926"
     }
   ],
   "configuration_version": "1"

@@ -6,7 +6,6 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.widget.RadioButton
 import android.widget.RadioGroup
-import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_timetable_list.*
@@ -37,9 +36,8 @@ class TimetableListActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        mAdView = findViewById(R.id.adView)
-        val adRequest = AdRequest.Builder().build()
-        mAdView.loadAd(adRequest)   }
+        Helpers.adHelper(findViewById(R.id.adView), this)
+    }
 
     fun getTimetableObjectsFromJsonArray(weekSelection: Int) {
         val gsonBuilder = GsonBuilder().serializeNulls()

@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.RadioGroup
-import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_route_list.*
@@ -43,7 +42,7 @@ class RouteListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         getRouteObjectsFromJsonArray(to_swords)
-        mAdView = Helpers.fragmentAdHelper(view)
+        mAdView = Helpers.adHelper(view, requireContext())
     }
 
     fun getRouteObjectsFromJsonArray(to_swords: Boolean) {
