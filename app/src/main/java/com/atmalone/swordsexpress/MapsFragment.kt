@@ -62,8 +62,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this.requireActivity())
 
-//        MobileAds.initialize(this.requireContext(), "ADMOB_APP_ID");
-
         setupPermissions()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this.requireActivity())
         return inflater.inflate(R.layout.fragment_maps, container, false)!!
