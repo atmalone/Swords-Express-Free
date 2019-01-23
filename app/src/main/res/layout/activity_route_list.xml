@@ -65,9 +65,10 @@
             tools:listitem="@layout/route_list_item"
             app:layout_constraintTop_toBottomOf="@+id/route_direction_group"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/adView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
-            android:layout_marginBottom="8dp" app:layout_constraintBottom_toTopOf="@+id/adView">
+    >
     </android.support.v7.widget.RecyclerView>
     <com.google.android.gms.ads.AdView
             xmlns:ads="http://schemas.android.com/apk/res-auto"
@@ -81,9 +82,8 @@
             ads:layout_constraintStart_toStartOf="parent"
             ads:layout_constraintEnd_toEndOf="parent"
             ads:layout_constraintBottom_toBottomOf="parent"
+            ads:layout_constraintTop_toBottomOf="@id/routeListView"
             android:layout_marginTop="8dp"
-            ads:layout_constraintTop_toTopOf="parent"
-            ads:layout_constraintVertical_bias="1.0"
-    >
+            ads:layout_constraintVertical_bias="1.0">
     </com.google.android.gms.ads.AdView>
 </android.support.constraint.ConstraintLayout>

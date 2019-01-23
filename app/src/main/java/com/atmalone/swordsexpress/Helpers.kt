@@ -13,7 +13,7 @@ class Helpers {
                 .addTestDevice("C50314F746E1C4158AFF27F3CAAD5DF5")
                 .build()
             mAdView.loadAd(adRequest)
-            
+
             adRequest.isTestDevice(context)
             return mAdView
         }

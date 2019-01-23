@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Swords Express</string>
+    <string name="google_maps_key">AIzaSyCiop1xFpLkn7bv3uNG3fGUyW-ndfJFXXU</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="action_settings">Settings</string>

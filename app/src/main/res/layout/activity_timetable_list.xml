@@ -80,7 +80,7 @@
             android:layout_marginStart="8dp"
             app:layout_constraintHorizontal_bias="0.0"
             android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp">
+            android:layout_marginBottom="4dp" app:layout_constraintVertical_bias="0.0">
     </android.support.v7.widget.RecyclerView>
 
     <com.google.android.gms.ads.AdView
@@ -95,6 +95,7 @@
             ads:layout_constraintStart_toStartOf="parent"
             ads:layout_constraintEnd_toEndOf="parent"
             ads:layout_constraintBottom_toBottomOf="parent"
+            ads:layout_constraintTop_toBottomOf="@id/timetableListView"
             android:layout_marginTop="8dp"
             ads:layout_constraintTop_toTopOf="parent"
             ads:layout_constraintVertical_bias="1.0"
