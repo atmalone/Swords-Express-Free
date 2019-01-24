@@ -4,11 +4,17 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.InterstitialAd
 import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_timetable_list.*
+import com.google.android.gms.ads.AdListener
+
+
 
 class TimetableListActivity : AppCompatActivity() {
     private var mAdapter: TimetableListAdapter = TimetableListAdapter(this)
@@ -18,6 +24,7 @@ class TimetableListActivity : AppCompatActivity() {
     private var mStopTitle = ""
     private var mToSwords: Boolean = false
     lateinit var mAdView : AdView
+    private lateinit var mInterstitialAd: InterstitialAd
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,11 +39,21 @@ class TimetableListActivity : AppCompatActivity() {
         mRecyclerView.adapter = mAdapter
         getTimetableObjectsFromJsonArray(weekSelection)
         toggleWeek()
+        mInterstitialAd = InterstitialAd(this)
+        mInterstitialAd.adUnitId = "ca-app-pub-1735218136968931/1940556846"
+        mInterstitialAd.loadAd(AdRequest.Builder().build())
     }
 
     override fun onStart() {
         super.onStart()
-        Helpers.adHelper(findViewById(R.id.adView), this)
+        mAdView = Helpers.adHelper(findViewById(R.id.adView), this)
+
+        mInterstitialAd.adListener = object : AdListener() {
+            override fun onAdLoaded() {
+                mInterstitialAd.show()
+            }
+        }
+
     }
 
     fun getTimetableObjectsFromJsonArray(weekSelection: Int) {
