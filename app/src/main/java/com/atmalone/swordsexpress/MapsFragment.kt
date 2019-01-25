@@ -321,7 +321,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
         return timetableRouteList
     }
 
-    @TargetApi(Build.VERSION_CODES.N)
     fun getNextBusAtStop(stopTitle: String): String {
         val timetableRouteList = getTimetableListFromResourceFile()
         val timetable = timetableRouteList.find {
