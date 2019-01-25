@@ -37,6 +37,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.joda.time.DateTime
 import org.joda.time.LocalDateTime
+import org.joda.time.chrono.GregorianChronology
 import org.joda.time.format.DateTimeFormat
 import java.io.IOException
 import java.time.format.FormatStyle
@@ -282,8 +283,8 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
 
     private fun selectTimetableRawResource(mToSwords: Boolean) : Int {
         var weekSelectionRawResource = 0
-        val calendar = Calendar.getInstance()
-        val day = calendar.get(Calendar.DAY_OF_WEEK)
+        val calendar = DateTime()
+        val day: Int = calendar.dayOfWeek
 
         when {
             (mToSwords && day in 1..5) -> {
