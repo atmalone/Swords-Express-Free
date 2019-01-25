@@ -11,6 +11,10 @@ import android.view.MenuItem
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.MobileAds
 import kotlinx.android.synthetic.main.activity_main.*
+import com.crashlytics.android.Crashlytics
+import io.fabric.sdk.android.Fabric
+
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,6 +31,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        Fabric.with(this, Crashlytics())
+
 
         if(BuildConfig.DEBUG) {
             MobileAds.initialize(
