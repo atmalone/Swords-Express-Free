@@ -2,8 +2,10 @@ package com.atmalone.swordsexpress
 
 import android.content.Context
 import android.view.View
+import android.widget.Adapter
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
+import com.google.gson.GsonBuilder
 
 class Helpers {
     companion object {
