@@ -7,10 +7,10 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.atmalone.swordsexpress"
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 28
-        versionCode 9
-        versionName "1.2"
+        versionCode 7
+        versionName "1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

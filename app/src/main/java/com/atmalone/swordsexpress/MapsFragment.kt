@@ -1,20 +1,20 @@
 package com.atmalone.swordsexpress
 
 import android.Manifest
-import android.annotation.TargetApi
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.SystemClock
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import com.google.android.gms.ads.AdView
@@ -36,42 +36,34 @@ import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.joda.time.DateTime
-import org.joda.time.LocalDateTime
-import org.joda.time.chrono.GregorianChronology
 import org.joda.time.format.DateTimeFormat
 import java.io.IOException
-import java.time.format.FormatStyle
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.concurrent.scheduleAtFixedRate
 
-class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
-
+class MapsFragment : Fragment(), OnMapReadyCallback {
     private val url = "https://www.swordsexpress.com/latlong.php"
-
     private lateinit var mFirebaseAnalytics: FirebaseAnalytics
     private lateinit var mMap: GoogleMap
     private lateinit var toSwordsStops: Array<StopInfo>
     private lateinit var toCityStops: Array<StopInfo>
-    private var mHandler = Handler()
-    private lateinit var mRunnable: Runnable
-//    var lat = 0.0
+    //    var lat = 0.0
     var mToSwords: Boolean = true
-    private val mStopMap = HashMap<String, Marker>()
+    private val mStopMapToSwords = HashMap<String, Marker>()
+    private val mStopMapToCity = HashMap<String, Marker>()
     var polylines = mutableListOf<Polyline>()
-    private val mBusMap = HashMap<String, Marker>()
-    private var busResponseBody: String? = ""
+    private var mBusMap = HashMap<String, Marker>()
+    private var mBusHashMapUpdated = HashMap<String, Marker>()
     val pattern: PatternItem = Dot()
     val patternList = mutableListOf<PatternItem>()
     private val TAG = "Location Permission"
     private lateinit var lastLocation: Location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    lateinit var mAdView : AdView
-    private var clickedMarkerTitle: String = ""
+    lateinit var mAdView: AdView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this.requireActivity())
-
         setupPermissions()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this.requireActivity())
         return inflater.inflate(R.layout.fragment_maps, container, false)!!
@@ -80,26 +72,29 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val supportMapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
-
         mAdView = Helpers.adHelper(view, requireContext())
         supportMapFragment.getMapAsync(this)
-
-        GlobalScope.launch {
-            fetchBusDataFromUrl()
-            getRouteObjectsFromJsonArray()
-            toggleStops()
+        GlobalScope.launch{
+            fetchBusDataFromUrlAsync(mBusMap)
         }
         patternList.add(pattern)
     }
 
+
     private fun setupPermissions() {
-        if (ContextCompat.checkSelfPermission(this.requireContext(),
-            android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(this.requireContext(),
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                this.requireContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(
+                this.requireContext(),
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             requestPermissions(
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE)
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
         } else {
             Log.e(TAG, "PERMISSION GRANTED")
         }
@@ -109,22 +104,18 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             when (grantResults[0]) {
                 PackageManager.PERMISSION_GRANTED -> {
-                    setUpMap()
+                    getUserLastLocation()
                 }
                 PackageManager.PERMISSION_DENIED -> setupPermissions()
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
     }
 
-    private fun createBusesFromResponseBody(busResponseBodyText: String?): List<BusInfo>? {
+    private fun createBusesFromResponseBody(busResponseBodyText: String?): MutableList<BusInfo> {
+        val buses: ArrayList<BusInfo> = arrayListOf()
         if (!busResponseBodyText.isNullOrEmpty()) {
-
             val arrayOfBuses = Gson().fromJson(busResponseBodyText, arrayListOf<MutableList<String>>()::class.java)
-
-            val buses: ArrayList<BusInfo> = arrayListOf()
-
             for (busArray in arrayOfBuses) {
                 if (busArray[1] == "hidden") continue
                 val license = busArray[0]
@@ -134,7 +125,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
 //                } else {
 //                lat = busArray[1].toDouble()
                 val lat = busArray[1].toDouble()
-
 //                }
                 val long: Double = busArray[2].toDouble()
                 val dateTime: String = busArray[3]
@@ -158,57 +148,27 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
 
                 buses.add(bus)
             }
-
-            return buses
         }
-
-        return null
+        return buses
     }
 
-    private fun fetchBusDataFromUrl() {
-
-
+    private fun fetchBusDataFromUrlAsync(busMap: HashMap<String, Marker>): MutableList<BusInfo> {
         val request = Request.Builder().url(url).build()
-
-        var client = OkHttpClient()
+        val client = OkHttpClient()
+        var buses = mutableListOf<BusInfo>()
         client.newCall(request).enqueue(object : Callback {
+
             override fun onResponse(call: okhttp3.Call?, response: okhttp3.Response?) {
-                busResponseBody = response?.body()?.string()
-
-                var buses = createBusesFromResponseBody(busResponseBody)
-
-                if (buses?.size == 0) {
-//                    //todo delete me
-//                    val busString =
-//                        resources.openRawResource(R.raw.buses)
-//                            .bufferedReader().use { it.readText() }
-//
-//                    buses = createBusesFromResponseBody(busString)
-//
-//
-//                    buses?.let { createBusMarkers(it) }
-                    if(!Alerter.isShowing)
-                        Alerter.create(requireActivity())
-                            .setTitle("Service Unavailable")
-                            .setText("Sorry, there are no buses available at this time")
-                            .enableSwipeToDismiss()
-                            .enableInfiniteDuration(true)
-                            .setBackgroundColorRes(R.color.colorGreen)
-                            .show()
-
-                } else {
-                    if(Alerter.isShowing)
-                        Alerter.clearCurrent(requireActivity())
-                    buses?.let {
-                        createBusMarkers(it)
-                    }
-                }
+                val stringResponse = response?.body()?.string()
+                buses = createBusesFromResponseBody(stringResponse)
+                createBusMarkers(busMap, buses)
             }
 
             override fun onFailure(call: okhttp3.Call?, e: IOException?) {
-
+                Log.e("Http API call failed", e?.message)
             }
         })
+        return buses
     }
 
     private fun createScaledBitmap(drawable: Int): Bitmap {
@@ -217,11 +177,28 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
         return Bitmap.createScaledBitmap(b, 100, 100, false)
     }
 
-    private fun createBusMarkers(buses: List<BusInfo>) {
+    private fun createAlerter(buses: MutableList<BusInfo>) {
+        if (buses.size == 0) {
+            if (!Alerter.isShowing)
+                Alerter.create(requireActivity())
+                    .setTitle("Service Unavailable")
+                    .setText("Sorry, there are no buses available at this time")
+                    .enableSwipeToDismiss()
+                    .enableInfiniteDuration(true)
+                    .setBackgroundColorRes(R.color.colorGreen)
+                    .show()
+
+        } else {
+            if (Alerter.isShowing)
+                Alerter.clearCurrent(requireActivity())
+        }
+    }
+
+    private fun createBusMarkers(busMap:HashMap<String, Marker>,buses: MutableList<BusInfo>) {
         try {
             buses.forEach { bus ->
                 requireActivity().runOnUiThread {
-                    mBusMap[bus.licenseNum] = createMarker(
+                    var markerOptions = createMarker(
                         bus.licenseNum,
                         LatLng(bus.lat, bus.long),
                         createScaledBitmap(R.drawable.bus_icon_green),
@@ -229,59 +206,47 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
                         bus.direction,
                         bus.speed
                     )
+                    busMap[mMap.addMarker(markerOptions).title]
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
-    private fun updateBusMarkers() {
-        if(this.activity != null) {
-            mBusMap.forEach { (s, marker) ->
-                requireActivity().runOnUiThread {
-                    marker.remove()
-                }
-            }
-            mBusMap.clear()
-            fetchBusDataFromUrl()
-        }
-    }
-
-    private fun createSwordsMarkers() {
+    private fun createSwordsMarkers(isVisible: Boolean) {
         toSwordsStops = Gson().fromJson(
             resources.openRawResource(R.raw.to_swords)
                 .bufferedReader().use { it.readText() }, Array<StopInfo>::class.java
         )
 
         toSwordsStops.forEach { stopInfo ->
-            mStopMap[stopInfo.stop_num] = createMarker(
-                stopInfo.stop_num,
-                LatLng(stopInfo.lat.toDouble(), stopInfo.long.toDouble()),
-                createScaledBitmap(R.drawable.stop_icon_small),
-                stopInfo.stop_name
-            )
+            var markerOption = createMarker(
+                stopInfo.stop_num, LatLng(stopInfo.lat.toDouble(), stopInfo.long.toDouble()),
+                createScaledBitmap(R.drawable.stop_icon_small), stopInfo.stop_name
+            ).visible(isVisible)
+            mStopMapToSwords[stopInfo.stop_name] = mMap.addMarker(markerOption)
+            mMap.addMarker(markerOption)
         }
     }
 
-    private fun createCityMarkers() {
+    private fun createCityMarkers(isVisible: Boolean) {
         toCityStops = Gson().fromJson(
             resources.openRawResource(R.raw.to_city)
                 .bufferedReader().use { it.readText() }, Array<StopInfo>::class.java
         )
 
         toCityStops.forEach { stopInfo ->
-            mStopMap[stopInfo.stop_num] = createMarker(
-                stopInfo.stop_num,
-                LatLng(stopInfo.lat.toDouble(), stopInfo.long.toDouble()),
-                createScaledBitmap(R.drawable.stop_icon_small),
-                stopInfo.stop_name
-            )
+            var markerOption = createMarker(
+                stopInfo.stop_num, LatLng(stopInfo.lat.toDouble(), stopInfo.long.toDouble()),
+                createScaledBitmap(R.drawable.stop_icon_small), stopInfo.stop_name
+            ).visible(isVisible)
+            mStopMapToCity[stopInfo.stop_name] = mMap.addMarker(markerOption)
+            mMap.addMarker(markerOption)
         }
     }
 
-    private fun selectTimetableRawResource(mToSwords: Boolean) : Int {
+    private fun selectTimetableRawResource(mToSwords: Boolean): Int {
         var weekSelectionRawResource = 0
         val calendar = DateTime()
         val day: Int = calendar.dayOfWeek
@@ -317,7 +282,8 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
         val timetableRouteList = gson.fromJson(resources.openRawResource(resource)
             .bufferedReader().use {
                 it.readText()
-            }, Array<Timetable>::class.java)
+            }, Array<Timetable>::class.java
+        )
             .toList()
         return timetableRouteList
     }
@@ -333,23 +299,23 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
         var nextBusString = ""
 
         try {
-            val timetableItem:TimetableItem? = timetable?.values?.find {
+            val timetableItem: TimetableItem? = timetable?.values?.find {
                 DateTime.parse(currentTime, formatter) <=
                         DateTime.parse(it.time, formatter)
             }
             if (timetableItem?.route != null || timetableItem?.time != null)
                 nextBusString = "Next expected bus is ${timetableItem.route} at ${timetableItem.time}"
 
-        }catch (e:Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
         }
         return nextBusString
     }
 
-    private fun createMarker(index: String, location: LatLng, bitmap: Bitmap, title: String): Marker {
+    private fun createMarker(index: String, location: LatLng, bitmap: Bitmap, title: String): MarkerOptions {
         val snippetText = getNextBusAtStop(title)
-        val markerOption : MarkerOptions
-        if (snippetText != ""){
+        val markerOption: MarkerOptions
+        if (snippetText != "") {
             markerOption = MarkerOptions().position(location)
                 .title(title)
                 .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
@@ -359,20 +325,24 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
                 .title(title)
                 .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
         }
-        return mMap.addMarker(markerOption)
+        return markerOption
     }
 
-    private fun createMarker(index: String, location: LatLng, bitmap: Bitmap, title: String, heading: String?, speed: String?): Marker {
-        val markerOption = MarkerOptions().position(location)
+    private fun createMarker(index: String, location: LatLng, bitmap: Bitmap, title: String, heading: String?,
+                             speed: String?): MarkerOptions {
+        val markerOption: MarkerOptions = MarkerOptions().position(location)
             .title(title)
             .icon(BitmapDescriptorFactory.fromBitmap(bitmap))
-            ?.snippet("Travelling $heading at $speed")
-        return mMap.addMarker(markerOption)
+            .snippet("Travelling $heading at $speed")
+        return markerOption
     }
 
-    private fun setUpMap() {
-        if (ContextCompat.checkSelfPermission(this.requireContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+    private fun getUserLastLocation() {
+        if (ContextCompat.checkSelfPermission(
+                this.requireContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             mMap.isMyLocationEnabled = true
 
             fusedLocationClient.lastLocation.addOnSuccessListener(this.requireActivity()) { location ->
@@ -389,39 +359,48 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        createCityMarkers(false)
+        createSwordsMarkers(false)
+        getRouteObjectsFromJsonArray()
+        createDirectionRadioGroupClickListener()
+        getUserLastLocation()
 
-        createCityMarkers()
+//        val stop = toCityStops.last()
+//        val startPosition = LatLng(stop.lat.toDouble(), stop.long.toDouble())
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPosition, 15f))
 
-        val stop = toCityStops.last()
-        val startPosition = LatLng(stop.lat.toDouble(), stop.long.toDouble())
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPosition, 15f))
-
-        updateBusesPeriodically()
 
         val routes = getRouteObjectsFromJsonArray()
         val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
         val route: Route? = routes.find { it.title == "waypoints500fromCity" }
         val routeEnd: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
-        polylines.add(this.mMap.addPolyline(PolylineOptions()
-            .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-        polylines.add(this.mMap.addPolyline(PolylineOptions()
-            .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-        polylines.add(this.mMap.addPolyline(PolylineOptions()
-            .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
+        polylines.add(
+            this.mMap.addPolyline(
+                PolylineOptions()
+                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)
+            )
+        )
+        polylines.add(
+            this.mMap.addPolyline(
+                PolylineOptions()
+                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+            )
+        )
+        polylines.add(
+            this.mMap.addPolyline(
+                PolylineOptions()
+                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+            )
+        )
 
         routeRadioButtonGroupListener(routes)
-        setUpMap()
-
-    }
-
-    override fun onMarkerClick(marker: Marker?): Boolean {
-        clickedMarkerTitle = marker?.title ?: ""
-        if (clickedMarkerTitle != "") {
-            updateStopWithNextBusAnnotation(clickedMarkerTitle)
+        mStopMapToCity.forEach { (stop, marker) ->
+            marker.isVisible = true
         }
-        return false
-    }
 
+        updateBusesPeriodically()
+
+    }
 
     private fun getRouteObjectsFromJsonArray(): List<Route> {
         val gsonBuilder = GsonBuilder().serializeNulls()
@@ -429,7 +408,8 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
         val gson = gsonBuilder.create()
 
         val routeList = gson.fromJson(resources.openRawResource(R.raw.routes)
-            .bufferedReader().use { it.readText() }, Array<Route>::class.java).toList()
+            .bufferedReader().use { it.readText() }, Array<Route>::class.java
+        ).toList()
 
         return routeList
     }
@@ -438,18 +418,81 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
         val timer = Timer()
         GlobalScope.launch {
             timer.scheduleAtFixedRate(10000, 10000) {
-                updateBusMarkers()
+//                if (mBusMap.size != 0) {
+                    updateBusMarkers()
+//                }
             }
         }
     }
 
-    private fun updateStopWithNextBusAnnotation(stopName: String) : String {
-        var nextBusAtStop : String = ""
+    private fun updateBusMarkers() {
+        fetchBusDataFromUrlAsync(mBusHashMapUpdated)
+//        if (mBusMap.size != 0) {
+// }
+//        else{
+//            createAlerter(buses)
+//        }
+        requireActivity().runOnUiThread {
+            mBusMap.forEach{(s, marker) ->
+                var newMarker = mBusHashMapUpdated[marker.title]
+                var oldMarker = marker
+                if (newMarker != null) {
+                    var startPosition = oldMarker.position
+                    var finalPosition = newMarker.position
+                    val handler = Handler(requireContext().mainLooper)
+                    val start: Long = SystemClock.uptimeMillis()
+                    val interpolator = AccelerateDecelerateInterpolator()
+                    val durationInMs = 3000F
 
-        return nextBusAtStop
+                    handler.post {
+                        var elapsed: Long
+                        var t: Float
+                        var v: Float
+
+                        var runnable: Runnable = object : Runnable {
+                            override fun run() {
+                                elapsed = SystemClock.uptimeMillis() - start;
+                                t = elapsed / durationInMs;
+                                v = interpolator.getInterpolation(t)
+                                var currentPosition = LatLng(
+                                    startPosition.latitude * (1 - t) + finalPosition.latitude * t,
+                                    startPosition.longitude * (1 - t) + finalPosition.longitude * t
+                                )
+                                requireActivity().runOnUiThread {
+                                    newMarker.position = currentPosition
+                                }
+                                // Repeat till progress is complete.
+                                if (t < 1) {
+                                    // Post again 16ms later.
+                                    handler.postDelayed(this, 16)
+                                }
+                            }
+                        }
+                        Thread(runnable).start()
+                    }
+                }
+            }
+        }
     }
 
-    private fun toggleStops() {
+
+    //todo delete the two method below
+//    override fun onMarkerClick(marker: Marker?): Boolean {
+//        clickedMarkerTitle = marker?.title ?: ""
+//        if (clickedMarkerTitle != "") {
+//            updateStopWithNextBusAnnotation(clickedMarkerTitle)
+//        }
+//        return false
+//    }
+//
+//
+//    private fun updateStopWithNextBusAnnotation(stopName: String) : String {
+//        var nextBusAtStop : String = ""
+//
+//        return nextBusAtStop
+//    }
+
+    private fun createDirectionRadioGroupClickListener() {
         val radioGroup: RadioGroup = direction_group
         val swordsRadioButton: RadioButton = rb_swords
         val cityRadioButton: RadioButton = rb_city
@@ -459,29 +502,35 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
                 (cityRadioButton.isChecked) -> {
                     mToSwords = false
 
-                    mStopMap.forEach { (stop, marker) ->
-                        marker.remove()
+                    mStopMapToSwords.forEach { (stop, marker) ->
+                        marker.isVisible = false
                     }
 
-                    mStopMap.entries.clear()
-                    createCityMarkers()
+                    mStopMapToCity.forEach { (stop, marker) ->
+                        marker.isVisible = true
+                    }
+
                 }
                 (swordsRadioButton.isChecked) -> {
                     mToSwords = true
-                    mStopMap.forEach { (stop, marker) ->
-                        marker.remove()
+
+                    mStopMapToSwords.forEach { (stop, marker) ->
+                        marker.isVisible = true
                     }
-                    mStopMap.entries.clear()
-                    createSwordsMarkers()
+
+                    mStopMapToCity.forEach { (stop, marker) ->
+                        marker.isVisible = false
+                    }
+
                 }
             }
-            if (cityRadioButton.isChecked){
+            if (cityRadioButton.isChecked) {
                 val routeRadioGroupToCity = requireActivity().findViewById(R.id.route_group_to_city) as RadioGroup
                 val routeRadioGroupToSwords = requireActivity().findViewById(R.id.route_group_to_swords) as RadioGroup
                 routeRadioGroupToSwords.visibility = View.INVISIBLE
                 routeRadioGroupToCity.visibility = View.VISIBLE
             }
-            if (swordsRadioButton.isChecked){
+            if (swordsRadioButton.isChecked) {
                 val routeRadioGroupToCity = requireActivity().findViewById(R.id.route_group_to_city) as RadioGroup
                 val routeRadioGroupToSwords = requireActivity().findViewById(R.id.route_group_to_swords) as RadioGroup
                 routeRadioGroupToSwords.visibility = View.VISIBLE
@@ -507,233 +556,479 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickList
     fun showHidePolyline(checkedRadioButtonText: String, routeList: List<Route>) {
         val routes = routeList
 
-        for(line in polylines)
-        {
+        for (line in polylines) {
             line.remove()
         }
 
         polylines.clear()
-    try{
-        when (checkedRadioButtonText){
-             "500" -> {
-                 if (mToSwords){
-                     val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
-                     val route: Route? = routes.find { it.title == "waypoints500fromCity" }
-                     val routeEnd: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
-                     polylines.add(this.mMap.addPolyline(PolylineOptions()
-                         .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                     polylines.add(this.mMap.addPolyline(PolylineOptions()
-                         .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-                     polylines.add(this.mMap.addPolyline(PolylineOptions()
-                         .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
-                 }
-                 else if(!mToSwords) {
-                     val routeStart: Route? = routes.find { it.title == "SwordsManorStart" }
-                     val routeMid1: Route? = routes.find { it.title == "waypoints500fromSwords" }
-                     val routeMid2: Route? = routes.find { it.title == "waypointsPortTunnel3Arena" }
-                     val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
-                     polylines.add(this.mMap.addPolyline(PolylineOptions()
-                         .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                     polylines.add(this.mMap.addPolyline(PolylineOptions()
-                         .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
-                     polylines.add(this.mMap.addPolyline(PolylineOptions()
-                         .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid2?.value)))
-                     polylines.add(this.mMap.addPolyline(PolylineOptions()
-                         .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
-                 }
-
-             }
-            "501" -> {
-                if (mToSwords){
-                    val routeStart: Route? = routes.find { it.title == "waypointsMerrionSqToPearseSt" }
-                    val route: Route? = routes.find { it.title == "waypoints500fromCity" }
-                    val routeEnd: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
-                } else if(!mToSwords) {
-                    val routeStart: Route? = routes.find { it.title == "PavilionsStart" }
-                    val route: Route? = routes.find { it.title == "waypoints501fromSwords" }
-                    val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
+        try {
+            when (checkedRadioButtonText) {
+                "500" -> {
+                    if (mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
+                        val route: Route? = routes.find { it.title == "waypoints500fromCity" }
+                        val routeEnd: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                            )
+                        )
+                    } else if (!mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "SwordsManorStart" }
+                        val routeMid1: Route? = routes.find { it.title == "waypoints500fromSwords" }
+                        val routeMid2: Route? = routes.find { it.title == "waypointsPortTunnel3Arena" }
+                        val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid2?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                            )
+                        )
                     }
 
                 }
-            "502" -> {
-                if (mToSwords){
-                    val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
-                    val route: Route? = routes.find { it.title == "waypoints506fromCity" }
-                    val routeEnd: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
-                } else if(!mToSwords) {
-                    val routeStart: Route? = routes.find { it.title == "HighfieldStart" }
-                    val route: Route? = routes.find { it.title == "waypoints501fromSwords" }
-                    val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
+                "501" -> {
+                    if (mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "waypointsMerrionSqToPearseSt" }
+                        val route: Route? = routes.find { it.title == "waypoints500fromCity" }
+                        val routeEnd: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                            )
+                        )
+                    } else if (!mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "PavilionsStart" }
+                        val route: Route? = routes.find { it.title == "waypoints501fromSwords" }
+                        val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                            )
+                        )
+                    }
+
                 }
-            }
-            "503" -> {
-                if (!mToSwords){
-                    val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
-                    val route: Route? = routes.find { it.title == "waypoints500XfromCity" }
-                    val routeEnd: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
-                } else if(mToSwords) {
+                "502" -> {
+                    if (mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
+                        val route: Route? = routes.find { it.title == "waypoints506fromCity" }
+                        val routeEnd: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                            )
+                        )
+                    } else if (!mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "HighfieldStart" }
+                        val route: Route? = routes.find { it.title == "waypoints501fromSwords" }
+                        val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                            )
+                        )
+                    }
+                }
+                "503" -> {
+                    if (!mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
+                        val route: Route? = routes.find { it.title == "waypoints500XfromCity" }
+                        val routeEnd: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                            )
+                        )
+                    } else if (mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "SwordsManorStart" }
+                        val routeMid1: Route? = routes.find { it.title == "waypoints500fromSwords" }
+                        val routeMid2: Route? = routes.find { it.title == "waypointsPortTunnel3Arena" }
+                        val routeEnd: Route? = routes.find { it.title == "waypointsPearseGardaToMerrionSq" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid2?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                            )
+                        )
+                    }
+                }
+                "504" -> {
+                    if (mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
+                        val route: Route? = routes.find { it.title == "waypoints501XfromCity" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+                            )
+                        )
+                    } else if (!mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "waypoints504fromSwords" }
+                        val route: Route? = routes.find { it.title == "waypointsPortTunnel3Arena" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+                            )
+                        )
+                    }
+                }
+                "505" -> {
+                    if (mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
+                        val route: Route? = routes.find { it.title == "waypoints505XfromCity" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+                            )
+                        )
+                    } else if (!mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "HighfieldStart" }
+                        val routeMid1: Route? = routes.find { it.title == "waypointsRiverValleyLoop" }
+                        val routeMid2: Route? = routes.find { it.title == "waypoints505fromSwords" }
+                        val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid2?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                            )
+                        )
+                    }
+                }
+                "506" -> {
+                    if (mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
+                        val routeMid1: Route? = routes.find { it.title == "waypoints506fromCity" }
+                        val route: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+                            )
+                        )
+                    } else if (!mToSwords) {
+                        val routeStart: Route? = routes.find { it.title == "HighfieldStart" }
+                        val routeMid1: Route? = routes.find { it.title == "waypoints501fromSwords" }
+                        val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(
+                                        routeStart?.value
+                                    )
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)
+                            )
+                        )
+                        polylines.add(
+                            this.mMap.addPolyline(
+                                PolylineOptions()
+                                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                            )
+                        )
+                    }
+                }
+                "507" -> {
                     val routeStart: Route? = routes.find { it.title == "SwordsManorStart" }
-                    val routeMid1: Route? = routes.find { it.title == "waypoints500fromSwords" }
+                    val routeMid1: Route? = routes.find { it.title == "waypoints507fromSwords" }
                     val routeMid2: Route? = routes.find { it.title == "waypointsPortTunnel3Arena" }
-                    val routeEnd: Route? = routes.find { it.title == "waypointsPearseGardaToMerrionSq" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid2?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
-                }
-            }
-            "504" -> {
-                if (mToSwords) {
-                    val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
-                    val route: Route? = routes.find { it.title == "waypoints501XfromCity" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-                } else if(!mToSwords) {
-                    val routeStart: Route? = routes.find { it.title == "waypoints504fromSwords" }
-                    val route: Route? = routes.find { it.title == "waypointsPortTunnel3Arena" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-                }
-            }
-            "505" -> {
-                if (mToSwords) {
-                    val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
-                    val route: Route? = routes.find { it.title == "waypoints505XfromCity" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-                } else if(!mToSwords) {
-                    val routeStart: Route? = routes.find { it.title == "HighfieldStart" }
-                    val routeMid1: Route? = routes.find { it.title == "waypointsRiverValleyLoop" }
-                    val routeMid2: Route? = routes.find { it.title == "waypoints505fromSwords" }
                     val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid2?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)
+                        )
+                    )
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)
+                        )
+                    )
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid2?.value)
+                        )
+                    )
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                        )
+                    )
                 }
-            }
-            "506" -> {
-                if (mToSwords) {
-                    val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
-                    val routeMid1: Route? = routes.find { it.title == "waypoints506fromCity" }
-                    val route: Route? = routes.find { it.title == "waypointsSwordsManorFinish" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-                } else if(!mToSwords) {
-                    val routeStart: Route? = routes.find { it.title == "HighfieldStart" }
-                    val routeMid1: Route? = routes.find { it.title == "waypoints501fromSwords" }
+                "500X" -> {
+                    val routeStart: Route? = routes.find { it.title == "SwordsManorStart" }
+                    val route: Route? = routes.find { it.title == "waypoints500XfromSwords" }
                     val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
-                    polylines.add(this.mMap.addPolyline(PolylineOptions()
-                        .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)
+                        )
+                    )
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)
+                        )
+                    )
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                        )
+                    )
                 }
-            }
-            "507" -> {
-                val routeStart: Route? = routes.find { it.title == "SwordsManorStart" }
-                val routeMid1: Route? = routes.find { it.title == "waypoints507fromSwords" }
-                val routeMid2: Route? = routes.find { it.title == "waypointsPortTunnel3Arena" }
-                val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid2?.value)))
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
-            }
-            "500X" -> {
-                val routeStart: Route? = routes.find { it.title == "SwordsManorStart" }
-                val route: Route? = routes.find { it.title == "waypoints500XfromSwords" }
-                val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(route?.value)))
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
-            }
-            "501X" -> {
-                val routeStart: Route? = routes.find { it.title == "PavilionsStart" }
-                val routeMid1: Route? = routes.find { it.title == "PavilionsExtensions501X" }
-                val routeMid2: Route? = routes.find { it.title == "waypoints501XfromSwords" }
-                val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid2?.value)))
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
-            }
-            "505X" -> {
-                val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
+                "501X" -> {
+                    val routeStart: Route? = routes.find { it.title == "PavilionsStart" }
+                    val routeMid1: Route? = routes.find { it.title == "PavilionsExtensions501X" }
+                    val routeMid2: Route? = routes.find { it.title == "waypoints501XfromSwords" }
+                    val routeEnd: Route? = routes.find { it.title == "waypoint3ArenaQuays" }
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)
+                        )
+                    )
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)
+                        )
+                    )
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid2?.value)
+                        )
+                    )
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                        )
+                    )
+                }
+                "505X" -> {
+                    val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
 //                val routeMid1: Route? = routes.find { it.title == "waypoints505XfromCity" }
-                val routeEnd: Route? = routes.find { it.title == "waypoints505XfromCity" }
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)))
+                    val routeEnd: Route? = routes.find { it.title == "waypoints505XfromCity" }
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeStart?.value)
+                        )
+                    )
 //                polylines.add(this.mMap.addPolyline(PolylineOptions()
 //                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeMid1?.value)))
-                polylines.add(this.mMap.addPolyline(PolylineOptions()
-                    .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)))
-            }
+                    polylines.add(
+                        this.mMap.addPolyline(
+                            PolylineOptions()
+                                .pattern(patternList).color(resources.getColor(R.color.colorGreen)).addAll(routeEnd?.value)
+                        )
+                    )
+                }
 
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-    } catch (e: Exception){
-        e.printStackTrace()
-    }
     }
 
     companion object {
