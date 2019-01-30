@@ -7,16 +7,12 @@ import com.atmalone.swordsexpress.BusInfoRepository
 
 class BusInfoViewModel : ViewModel() {
 
-    var reposResult = MutableLiveData<MutableList<BusInfo>>()
+    val reposResult = MutableLiveData<MutableList<BusInfo>>()
 
     private val busInfoRepository = BusInfoRepository.instance()
 
     init {
         loadBusInfoListFromUrl()
-    }
-
-    fun getBusInfoList(): MutableList<BusInfo>? {
-        return reposResult.value
     }
 
     fun loadBusInfoListFromUrl(): MutableList<BusInfo> {
