@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:tools="http://schemas.android.com/tools"
-      tools:context="com.atmalone.swordsexpress.MainActivity">
+      tools:context="com.atmalone.swordsexpress.activities.MainActivity">
     <item android:id="@+id/action_tickets_and_fares"
           android:title="@string/action_tickets_and_fares"
           android:orderInCategory="100"

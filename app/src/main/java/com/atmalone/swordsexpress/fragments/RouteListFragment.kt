@@ -1,4 +1,4 @@
-package com.atmalone.swordsexpress
+package com.atmalone.swordsexpress.fragments
 
 
 import android.content.Context
@@ -11,6 +11,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import com.atmalone.swordsexpress.deserializers.TimetableRouteListDeserializer
+import com.atmalone.swordsexpress.utils.Helpers
+import com.atmalone.swordsexpress.models.TimetableRouteTitle
+import com.atmalone.swordsexpress.R
+import com.atmalone.swordsexpress.adapters.RouteListAdapter
 import com.google.android.gms.ads.AdView
 import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_route_list.*
@@ -47,7 +52,9 @@ class RouteListFragment : Fragment() {
 
     fun getRouteObjectsFromJsonArray(to_swords: Boolean) {
         val gsonBuilder = GsonBuilder().serializeNulls()
-        gsonBuilder.registerTypeAdapter(TimetableRouteTitle::class.java, TimetableRouteListDeserializer())
+        gsonBuilder.registerTypeAdapter(TimetableRouteTitle::class.java,
+            TimetableRouteListDeserializer()
+        )
         val gson = gsonBuilder.create()
 
         val timetableRouteList = gson.fromJson(resources.openRawResource(R.raw.timetable_stops)

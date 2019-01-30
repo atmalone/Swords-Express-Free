@@ -1,4 +1,4 @@
-package com.atmalone.swordsexpress
+package com.atmalone.swordsexpress.models
 
 import com.google.android.gms.maps.model.LatLng
 

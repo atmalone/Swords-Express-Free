@@ -1,11 +1,10 @@
-package com.atmalone.swordsexpress
+package com.atmalone.swordsexpress.utils
 
 import android.content.Context
 import android.view.View
-import android.widget.Adapter
+import com.atmalone.swordsexpress.R
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
-import com.google.gson.GsonBuilder
 
 class Helpers {
     companion object {
