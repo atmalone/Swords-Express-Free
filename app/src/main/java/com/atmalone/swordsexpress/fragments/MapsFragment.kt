@@ -1,6 +1,8 @@
-package com.atmalone.swordsexpress
+package com.atmalone.swordsexpress.fragments
 
 import android.Manifest
+import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.ViewModelProviders
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -17,6 +19,12 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import com.atmalone.swordsexpress.deserializers.TimetableDeserializer
+import com.atmalone.swordsexpress.utils.Helpers
+import com.atmalone.swordsexpress.models.*
+import com.atmalone.swordsexpress.R
+import com.atmalone.swordsexpress.deserializers.RouteDeserializer
+import com.atmalone.swordsexpress.viewmodels.BusInfoViewModel
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -32,18 +40,13 @@ import com.tapadoo.alerter.Alerter
 import kotlinx.android.synthetic.main.fragment_maps.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import okhttp3.Callback
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import java.io.IOException
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.concurrent.scheduleAtFixedRate
 
 class MapsFragment : Fragment(), OnMapReadyCallback {
-    private val url = "https://www.swordsexpress.com/latlong.php"
     private lateinit var mFirebaseAnalytics: FirebaseAnalytics
     private lateinit var mMap: GoogleMap
     private lateinit var toSwordsStops: Array<StopInfo>
@@ -53,19 +56,26 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     private val mStopMapToSwords = HashMap<String, Marker>()
     private val mStopMapToCity = HashMap<String, Marker>()
     var polylines = mutableListOf<Polyline>()
-    private var mBusMap = HashMap<String, Marker>()
-    private var mBusHashMapUpdated = HashMap<String, Marker>()
+    private var mBusMap = HashMap<String, MarkerOptions>()
+    private var mBusHashMapUpdated = HashMap<String, MarkerOptions>()
     val pattern: PatternItem = Dot()
     val patternList = mutableListOf<PatternItem>()
     private val TAG = "Location Permission"
     private lateinit var lastLocation: Location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     lateinit var mAdView: AdView
+    private lateinit var mModel: BusInfoViewModel
+    val busInfoViewModel: BusInfoViewModel
+        get() = ViewModelProviders.of(this).get(BusInfoViewModel::class.java)
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this.requireActivity())
         setupPermissions()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this.requireActivity())
+
+        mModel = ViewModelProviders.of(this).get(BusInfoViewModel::class.java)
+
         return inflater.inflate(R.layout.fragment_maps, container, false)!!
     }
 
@@ -74,9 +84,10 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         val supportMapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mAdView = Helpers.adHelper(view, requireContext())
         supportMapFragment.getMapAsync(this)
-        GlobalScope.launch{
-            fetchBusDataFromUrlAsync(mBusMap)
-        }
+//        GlobalScope.launch{
+//            fetchBusDataFromUrlAsync(mBusMap)
+//            var listOfBuses = mModel.loadBusInfoListFromUrl()
+//        }
         patternList.add(pattern)
     }
 
@@ -112,65 +123,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    private fun createBusesFromResponseBody(busResponseBodyText: String?): MutableList<BusInfo> {
-        val buses: ArrayList<BusInfo> = arrayListOf()
-        if (!busResponseBodyText.isNullOrEmpty()) {
-            val arrayOfBuses = Gson().fromJson(busResponseBodyText, arrayListOf<MutableList<String>>()::class.java)
-            for (busArray in arrayOfBuses) {
-                if (busArray[1] == "hidden") continue
-                val license = busArray[0]
-//                //todo delete me
-//                if (lat != 0.0) {
-//                    lat += 0.05
-//                } else {
-//                lat = busArray[1].toDouble()
-                val lat = busArray[1].toDouble()
-//                }
-                val long: Double = busArray[2].toDouble()
-                val dateTime: String = busArray[3]
-                val num: String = busArray[4]
-                val speed: String = busArray[5]
-                var direction: String = busArray[6]
-
-                when (direction) {
-                    "n" -> direction = "North"
-                    "ne" -> direction = "Northeast"
-                    "nw" -> direction = "Northwest"
-                    "s" -> direction = "South"
-                    "se" -> direction = "Southeast"
-                    "sw" -> direction = "Southwest"
-                    "e" -> direction = "East"
-                    "w" -> direction = "West"
-                }
-
-
-                var bus = BusInfo(license, lat, long, dateTime, num, speed, direction)
-
-                buses.add(bus)
-            }
-        }
-        return buses
-    }
-
-    private fun fetchBusDataFromUrlAsync(busMap: HashMap<String, Marker>): MutableList<BusInfo> {
-        val request = Request.Builder().url(url).build()
-        val client = OkHttpClient()
-        var buses = mutableListOf<BusInfo>()
-        client.newCall(request).enqueue(object : Callback {
-
-            override fun onResponse(call: okhttp3.Call?, response: okhttp3.Response?) {
-                val stringResponse = response?.body()?.string()
-                buses = createBusesFromResponseBody(stringResponse)
-                createBusMarkers(busMap, buses)
-            }
-
-            override fun onFailure(call: okhttp3.Call?, e: IOException?) {
-                Log.e("Http API call failed", e?.message)
-            }
-        })
-        return buses
-    }
-
     private fun createScaledBitmap(drawable: Int): Bitmap {
         val bitmapdraw = ContextCompat.getDrawable(this.requireContext(), drawable) as BitmapDrawable
         val b = bitmapdraw.bitmap
@@ -194,11 +146,11 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun createBusMarkers(busMap:HashMap<String, Marker>,buses: MutableList<BusInfo>) {
+    private fun createBusMarkers(busMap:HashMap<String, MarkerOptions>,buses: MutableLiveData<MutableList<BusInfo>>) {
         try {
-            buses.forEach { bus ->
-                requireActivity().runOnUiThread {
-                    var markerOptions = createMarker(
+            requireActivity().runOnUiThread {
+                buses.value?.forEach { bus ->
+                    busMap[bus.licenseNum] = createMarker(
                         bus.licenseNum,
                         LatLng(bus.lat, bus.long),
                         createScaledBitmap(R.drawable.bus_icon_green),
@@ -206,7 +158,9 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
                         bus.direction,
                         bus.speed
                     )
-                    busMap[mMap.addMarker(markerOptions).title]
+                    busMap.forEach { s, marker ->
+                        mMap.addMarker(marker)
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -276,7 +230,9 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
 
     private fun getTimetableListFromResourceFile(): List<Timetable> {
         val gsonBuilder = GsonBuilder().serializeNulls()
-        gsonBuilder.registerTypeAdapter(Timetable::class.java, TimetableDeserializer())
+        gsonBuilder.registerTypeAdapter(Timetable::class.java,
+            TimetableDeserializer()
+        )
         val gson = gsonBuilder.create()
         val resource = selectTimetableRawResource(mToSwords)
         val timetableRouteList = gson.fromJson(resources.openRawResource(resource)
@@ -398,6 +354,9 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
             marker.isVisible = true
         }
 
+        busInfoViewModel.reposResult.observe(this, android.arch.lifecycle.Observer {
+            createBusMarkers(mBusMap, busInfoViewModel.reposResult)
+        })
         updateBusesPeriodically()
 
     }
@@ -426,49 +385,48 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun updateBusMarkers() {
-        fetchBusDataFromUrlAsync(mBusHashMapUpdated)
-//        if (mBusMap.size != 0) {
-// }
-//        else{
-//            createAlerter(buses)
-//        }
+
+        var buses = busInfoViewModel.reposResult
+        createBusMarkers(mBusHashMapUpdated, buses)
         requireActivity().runOnUiThread {
-            mBusMap.forEach{(s, marker) ->
-                var newMarker = mBusHashMapUpdated[marker.title]
-                var oldMarker = marker
-                if (newMarker != null) {
+            mBusHashMapUpdated.forEach{(s, marker) ->
+                var newMarker = marker
+                var oldMarker = mBusMap[marker.title]
+                if (oldMarker != null) {
                     var startPosition = oldMarker.position
                     var finalPosition = newMarker.position
-                    val handler = Handler(requireContext().mainLooper)
-                    val start: Long = SystemClock.uptimeMillis()
-                    val interpolator = AccelerateDecelerateInterpolator()
-                    val durationInMs = 3000F
+                    if (startPosition != finalPosition){
+                        val handler = Handler(requireContext().mainLooper)
+                        val start: Long = SystemClock.uptimeMillis()
+                        val interpolator = AccelerateDecelerateInterpolator()
+                        val durationInMs = 3000F
 
-                    handler.post {
-                        var elapsed: Long
-                        var t: Float
-                        var v: Float
+                        handler.post {
+                            var elapsed: Long
+                            var t: Float
+                            var v: Float
 
-                        var runnable: Runnable = object : Runnable {
-                            override fun run() {
-                                elapsed = SystemClock.uptimeMillis() - start;
-                                t = elapsed / durationInMs;
-                                v = interpolator.getInterpolation(t)
-                                var currentPosition = LatLng(
-                                    startPosition.latitude * (1 - t) + finalPosition.latitude * t,
-                                    startPosition.longitude * (1 - t) + finalPosition.longitude * t
-                                )
-                                requireActivity().runOnUiThread {
-                                    newMarker.position = currentPosition
-                                }
-                                // Repeat till progress is complete.
-                                if (t < 1) {
-                                    // Post again 16ms later.
-                                    handler.postDelayed(this, 16)
+                            var runnable: Runnable = object : Runnable {
+                                override fun run() {
+                                    elapsed = SystemClock.uptimeMillis() - start;
+                                    t = elapsed / durationInMs;
+                                    v = interpolator.getInterpolation(t)
+                                    var currentPosition = LatLng(
+                                        startPosition.latitude * (1 - t) + finalPosition.latitude * t,
+                                        startPosition.longitude * (1 - t) + finalPosition.longitude * t
+                                    )
+                                    requireActivity().runOnUiThread {
+                                        newMarker.position(currentPosition)
+                                    }
+                                    // Repeat till progress is complete.
+                                    if (t < 1) {
+                                        // Post again 16ms later.
+                                        handler.postDelayed(this, 16)
+                                    }
                                 }
                             }
+                            Thread(runnable).start()
                         }
-                        Thread(runnable).start()
                     }
                 }
             }
