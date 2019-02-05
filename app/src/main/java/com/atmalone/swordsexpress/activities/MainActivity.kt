@@ -1,4 +1,4 @@
-package com.atmalone.swordsexpress
+package com.atmalone.swordsexpress.activities
 
 import android.os.Bundle
 import android.support.design.widget.TabLayout
@@ -8,7 +8,12 @@ import android.support.v4.app.FragmentPagerAdapter
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import com.google.android.gms.ads.AdRequest
+import com.atmalone.swordsexpress.ADMOB_APP_ID
+import com.atmalone.swordsexpress.BuildConfig
+import com.atmalone.swordsexpress.fragments.MapsFragment
+import com.atmalone.swordsexpress.fragments.RouteListFragment
+import com.atmalone.swordsexpress.R
+import com.atmalone.swordsexpress.TEST_ADMOB_APP_ID
 import com.google.android.gms.ads.MobileAds
 import kotlinx.android.synthetic.main.activity_main.*
 import com.crashlytics.android.Crashlytics
@@ -38,12 +43,14 @@ class MainActivity : AppCompatActivity() {
         if(BuildConfig.DEBUG) {
             MobileAds.initialize(
                 this,
-                TEST_ADMOB_APP_ID)
+                TEST_ADMOB_APP_ID
+            )
         }
         else{
             MobileAds.initialize(
                 this,
-                ADMOB_APP_ID)
+                ADMOB_APP_ID
+            )
         }
         setSupportActionBar(toolbar)
         // Create the adapter that will return a fragment for each of the three

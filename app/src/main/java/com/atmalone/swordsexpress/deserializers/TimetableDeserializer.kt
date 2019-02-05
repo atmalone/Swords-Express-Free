@@ -1,6 +1,8 @@
-package com.atmalone.swordsexpress
+package com.atmalone.swordsexpress.deserializers
 
 import android.util.Log
+import com.atmalone.swordsexpress.models.Timetable
+import com.atmalone.swordsexpress.models.TimetableItem
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -23,7 +25,7 @@ class TimetableDeserializer: JsonDeserializer<Timetable> {
                 var title: String = timetableRoute.title
                 var time: String = timetableJsonObject.asJsonObject.get("time").asString
                 var route: String = timetableJsonObject.asJsonObject.get("route").asString
-                timetableItem = TimetableItem(title,time, route)
+                timetableItem = TimetableItem(title, time, route)
                 timetableRoute.values.add(timetableItem!!)
             }
         }

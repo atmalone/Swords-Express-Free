@@ -33,7 +33,7 @@
                 android:value="ca-app-pub-1735218136968931~6831557926"/>
 
         <activity
-                android:name=".MapsFragment"
+                android:name=".fragments.MapsFragment"
                 android:label="@string/title_activity_maps">
         </activity>
 
@@ -42,7 +42,7 @@
                 android:required="false"/>
 
         <activity
-                android:name=".MainActivity"
+                android:name=".activities.MainActivity"
                 android:label="@string/SwordsExpress"
                 android:screenOrientation="portrait"
                 android:theme="@style/AppTheme.NoActionBar">
@@ -52,9 +52,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".TimetableListActivity">
+        <activity android:name=".activities.TimetableListActivity">
         </activity>
-        <activity android:name=".RouteListFragment">
+        <activity android:name=".fragments.RouteListFragment">
         </activity>
 
         <meta-data

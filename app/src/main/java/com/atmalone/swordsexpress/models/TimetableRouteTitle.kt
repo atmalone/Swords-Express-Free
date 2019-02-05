@@ -1,4 +1,4 @@
-package com.atmalone.swordsexpress
+package com.atmalone.swordsexpress.models
 
 class TimetableRouteTitle {
     var title : String = ""

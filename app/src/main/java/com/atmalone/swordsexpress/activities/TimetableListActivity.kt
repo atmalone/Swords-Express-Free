@@ -1,4 +1,4 @@
-package com.atmalone.swordsexpress
+package com.atmalone.swordsexpress.activities
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -6,6 +6,14 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import com.atmalone.swordsexpress.adapters.TimetableListAdapter
+import com.atmalone.swordsexpress.DIRECTION
+import com.atmalone.swordsexpress.deserializers.TimetableDeserializer
+import com.atmalone.swordsexpress.utils.Helpers
+import com.atmalone.swordsexpress.models.Timetable
+import com.atmalone.swordsexpress.models.TimetableItem
+import com.atmalone.swordsexpress.R
+import com.atmalone.swordsexpress.STOP_TITLE
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.InterstitialAd
@@ -16,7 +24,8 @@ import com.google.android.gms.ads.AdListener
 
 
 class TimetableListActivity : AppCompatActivity() {
-    private var mAdapter: TimetableListAdapter = TimetableListAdapter(this)
+    private var mAdapter: TimetableListAdapter =
+        TimetableListAdapter(this)
     private lateinit var mRecyclerView: RecyclerView
     private var listOfTimetables = mutableListOf<TimetableItem>()
     private var weekSelection: Int = 0
@@ -45,7 +54,10 @@ class TimetableListActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        mAdView = Helpers.adHelper(findViewById(R.id.adView), this)
+        mAdView = Helpers.adHelper(
+            findViewById(R.id.adView),
+            this
+        )
 
         mInterstitialAd.adListener = object : AdListener() {
             override fun onAdLoaded() {
@@ -57,7 +69,9 @@ class TimetableListActivity : AppCompatActivity() {
 
     fun getTimetableObjectsFromJsonArray(weekSelection: Int) {
         val gsonBuilder = GsonBuilder().serializeNulls()
-        gsonBuilder.registerTypeAdapter(Timetable::class.java, TimetableDeserializer())
+        gsonBuilder.registerTypeAdapter(Timetable::class.java,
+            TimetableDeserializer()
+        )
         val gson = gsonBuilder.create()
         var resource = selectRawResource(mToSwords, weekSelection)
         val timetableRouteList = gson.fromJson(resources.openRawResource(resource)

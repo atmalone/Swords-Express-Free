@@ -1,12 +1,12 @@
-package com.atmalone.swordsexpress
+package com.atmalone.swordsexpress.deserializers
 
 import android.util.Log
+import com.atmalone.swordsexpress.models.Route
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import java.io.Console
 import java.lang.reflect.Type
 
 class RouteDeserializer : JsonDeserializer<Route> {

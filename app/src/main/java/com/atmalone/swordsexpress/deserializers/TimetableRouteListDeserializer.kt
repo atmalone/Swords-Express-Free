@@ -1,6 +1,7 @@
-package com.atmalone.swordsexpress
+package com.atmalone.swordsexpress.deserializers
 
 import android.util.Log
+import com.atmalone.swordsexpress.models.TimetableRouteTitle
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
