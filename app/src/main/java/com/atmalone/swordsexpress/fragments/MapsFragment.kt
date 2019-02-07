@@ -41,28 +41,26 @@ import kotlin.concurrent.scheduleAtFixedRate
 class MapsFragment : Fragment(), OnMapReadyCallback {
     private lateinit var mFirebaseAnalytics: FirebaseAnalytics
     private lateinit var mMap: GoogleMap
-    //    var lat = 0.0
-    var mToSwords: Boolean = true
+    private var mToSwords: Boolean = true
     private val mStopMapToSwords = HashMap<String, Marker>()
     private val mStopMapToCity = HashMap<String, Marker>()
-    var mPolylines = mutableListOf<Polyline>()
+    private var mPolylines = mutableListOf<Polyline>()
     private var mBusMap = HashMap<String, Marker>()
-    val pattern: PatternItem = Dot()
-    val mPatternList = mutableListOf<PatternItem>()
+    private val pattern: PatternItem = Dot()
+    private val mPatternList = mutableListOf<PatternItem>()
     private val TAG = "Location Permission"
     private lateinit var lastLocation: Location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    lateinit var mAdView: AdView
-    val busInfoViewModel: BusInfoViewModel
-        get() = ViewModelProviders.of(this.requireActivity()).get(BusInfoViewModel::class.java)
-
+    private lateinit var mAdView: AdView
+    private lateinit var mBusInfoViewModel: BusInfoViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this.requireActivity())
         setupPermissions()
+        if (isAdded){
+            mBusInfoViewModel = ViewModelProviders.of(this.requireActivity()).get(BusInfoViewModel::class.java)
+        }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this.requireActivity())
-        busInfoViewModel.reposResult.observe(this, android.arch.lifecycle.Observer{
-        })
         return inflater.inflate(R.layout.fragment_maps, container, false)!!
     }
 
@@ -71,11 +69,11 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         val supportMapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mAdView = Helpers.adHelper(view, requireContext())
         supportMapFragment.getMapAsync(this)
-//        GlobalScope.launch{
-//            fetchBusDataFromUrlAsync(mBusMap)
-//            var listOfBuses = mModel.loadBusInfoListFromUrl()
-//        }
         mPatternList.add(pattern)
+        if (isAdded){
+            mBusInfoViewModel.reposResult.observe(this, android.arch.lifecycle.Observer{
+            })
+        }
     }
 
 
@@ -154,11 +152,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         createDirectionRadioGroupClickListener()
         getUserLastLocation()
 
-//        val stop = toCityStops.last()
-//        val startPosition = LatLng(stop.lat.toDouble(), stop.long.toDouble())
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPosition, 15f))
-
-
         val routes = Helpers.getRouteObjectsFromJsonArray(requireActivity())
         val routeStart: Route? = routes.find { it.title == "waypointsEdenQuayStart" }
         val route: Route? = routes.find { it.title == "waypoints500fromCity" }
@@ -188,8 +181,8 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
             marker.isVisible = true
         }
 
-        MapHelper.createBusMarkers(requireActivity(),mMap, mBusMap, busInfoViewModel.getBusInfoList())
-        createAlerter(busInfoViewModel.getBusInfoList())
+        MapHelper.createBusMarkers(requireActivity(),mMap, mBusMap, mBusInfoViewModel.getBusInfoList())
+        createAlerter(mBusInfoViewModel.getBusInfoList())
         updateBusesPeriodically()
 
     }
@@ -197,18 +190,16 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     private fun updateBusesPeriodically() {
         val timer = Timer()
         GlobalScope.launch {
-            timer.scheduleAtFixedRate(10000, 10000) {
-                //                if (mBusMap.size != 0) {
+            timer.scheduleAtFixedRate(5000, 5000) {
                 updateBusMarkers()
-//                }
             }
         }
     }
 
     private fun updateBusMarkers() {
-        busInfoViewModel.loadBusInfoListFromUrl()
-        createAlerter(busInfoViewModel.getBusInfoList())
-        val busInfo = busInfoViewModel.getBusInfoList()
+        mBusInfoViewModel.loadBusInfoListFromUrl()
+        createAlerter(mBusInfoViewModel.getBusInfoList())
+        val busInfo = mBusInfoViewModel.getBusInfoList()
         requireActivity().runOnUiThread {
             mBusMap.forEach{(s, marker) ->
                 val oldMarker = marker
@@ -219,7 +210,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
                     if (startPosition != newPosition){
                         val handler = Handler(requireContext().mainLooper)
                         val start: Long = SystemClock.uptimeMillis()
-                        val interpolator = AccelerateDecelerateInterpolator()
                         val durationInMs = 3000F
 
                         handler.post {
@@ -234,14 +224,18 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
                                             startPosition.latitude * (1 - t) + newPosition.latitude * t,
                                             startPosition.longitude * (1 - t) + newPosition.longitude * t
                                         )
-                                        requireActivity().runOnUiThread {
-                                            oldMarker.position = currentPosition
-                                            oldMarker.snippet = MapHelper.createBusMarkerSnippet(newBusInfo)
-                                        }
-                                        // Repeat till progress is complete.
-                                        if (t < 1) {
-                                            // Post again 16ms later.
-                                            handler.postDelayed(this, 16)
+                                        if(!isAdded)
+                                            return
+                                        else{
+                                            requireActivity().runOnUiThread {
+                                                oldMarker.position = currentPosition
+                                                oldMarker.snippet = MapHelper.createBusMarkerSnippet(newBusInfo)
+                                            }
+                                            // Repeat till progress is complete.
+                                            if (t < 1) {
+                                                // Post again 16ms later.
+                                                handler.postDelayed(this, 16)
+                                            }
                                         }
                                     }
                                 }
